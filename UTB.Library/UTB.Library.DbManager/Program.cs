@@ -3,13 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ZMENA: Pre Mac a Docker používame MySql namiesto SqlServer
-// Názov "database" musí presne sedieť s tým, čo máme v AppHoste
+builder.AddServiceDefaults();
+
 builder.AddMySqlDbContext<LibraryContext>("database");
 
 var app = builder.Build();
 
-// Náš endpoint na resetovanie a naplnenie (seeding) databázy
+app.MapDefaultEndpoints();
+
 app.MapPost("/reset-db", async (LibraryContext context) =>
 {
     await context.Database.EnsureDeletedAsync();

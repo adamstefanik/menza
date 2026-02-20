@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\UTB.Library.Db\UTB.Library.Db.csproj" />
+    <ProjectReference Include="..\UTB.Library.ServiceDefaults\UTB.Library.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

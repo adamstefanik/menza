@@ -8,6 +8,8 @@ var mysql = builder.AddMySql("mysql")
 var database = mysql.AddDatabase("database");
 
 builder.AddProject<Projects.UTB_Library_DbManager>("dbmanager")
-       .WithReference(database);
+       .WithReference(database)
+       .WithHttpCommand("reset-db", "Reset Database")
+       .WaitFor(database);
 
 builder.Build().Run();
