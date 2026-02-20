@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.1">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>f20fe9d8-3e92-4905-8332-1fa69ddf7f4c</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.MySql" Version="13.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UTB.Library.DbManager\UTB.Library.DbManager.csproj" />
+  </ItemGroup>
+
+</Project>
