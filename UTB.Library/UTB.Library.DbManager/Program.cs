@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddMySqlDbContext<LibraryContext>("database");
+builder.AddNpgsqlDbContext<LibraryContext>("database");
 
 var app = builder.Build();
 
