@@ -9,7 +9,7 @@
       "UTB.Library.AppHost/1.0.0": {
         "dependencies": {
           "Aspire.Hosting.AppHost": "13.1.1",
-          "Aspire.Hosting.MySql": "13.1.1"
+          "Aspire.Hosting.PostgreSQL": "13.1.1"
         },
         "runtime": {
           "UTB.Library.AppHost.dll": {}
@@ -103,9 +103,9 @@
           }
         }
       },
-      "Aspire.Hosting.MySql/13.1.1": {
+      "Aspire.Hosting.PostgreSQL/13.1.1": {
         "dependencies": {
-          "AspNetCore.HealthChecks.MySql": "9.0.0",
+          "AspNetCore.HealthChecks.NpgSql": "9.0.0",
           "AspNetCore.HealthChecks.Uris": "9.0.0",
           "Aspire.Hosting": "13.1.1",
           "Google.Protobuf": "3.33.0",
@@ -122,18 +122,18 @@
           "System.IO.Hashing": "9.0.10"
         },
         "runtime": {
-          "lib/net8.0/Aspire.Hosting.MySql.dll": {
+          "lib/net8.0/Aspire.Hosting.PostgreSQL.dll": {
             "assemblyVersion": "13.1.1.0",
             "fileVersion": "13.100.126.10508"
           }
         }
       },
-      "AspNetCore.HealthChecks.MySql/9.0.0": {
+      "AspNetCore.HealthChecks.NpgSql/9.0.0": {
         "dependencies": {
-          "MySqlConnector": "2.3.1"
+          "Npgsql": "8.0.3"
         },
         "runtime": {
-          "lib/net8.0/HealthChecks.MySql.dll": {
+          "lib/net8.0/HealthChecks.NpgSql.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.0.0"
           }
@@ -423,14 +423,6 @@
           }
         }
       },
-      "MySqlConnector/2.3.1": {
-        "runtime": {
-          "lib/net8.0/MySqlConnector.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.3.1.0"
-          }
-        }
-      },
       "Nerdbank.Streams/2.12.87": {
         "dependencies": {
           "Microsoft.VisualStudio.Threading.Only": "17.13.61",
@@ -448,6 +440,14 @@
           "lib/net6.0/Newtonsoft.Json.dll": {
             "assemblyVersion": "13.0.0.0",
             "fileVersion": "13.0.4.30916"
+          }
+        }
+      },
+      "Npgsql/8.0.3": {
+        "runtime": {
+          "lib/net8.0/Npgsql.dll": {
+            "assemblyVersion": "8.0.3.0",
+            "fileVersion": "8.0.3.0"
           }
         }
       },
@@ -571,19 +571,19 @@
       "path": "aspire.hosting.apphost/13.1.1",
       "hashPath": "aspire.hosting.apphost.13.1.1.nupkg.sha512"
     },
-    "Aspire.Hosting.MySql/13.1.1": {
+    "Aspire.Hosting.PostgreSQL/13.1.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ijPnkmFTDXF1BDPG2LkkUbn6Ubabte8pwcD5+W4xMO8nNeuJe2ULHVmteIjJjH0sgPodxBAQZytZLQ1sbxVHwg==",
-      "path": "aspire.hosting.mysql/13.1.1",
-      "hashPath": "aspire.hosting.mysql.13.1.1.nupkg.sha512"
+      "sha512": "sha512-ByZf0/Je2odrHDObOTZGn+IXX/umaHujSIY0KOmvd0sAYX6yO5W7EHGkTYjZMRFWY+zuRh4PRcUGVOVX7I5fuw==",
+      "path": "aspire.hosting.postgresql/13.1.1",
+      "hashPath": "aspire.hosting.postgresql.13.1.1.nupkg.sha512"
     },
-    "AspNetCore.HealthChecks.MySql/9.0.0": {
+    "AspNetCore.HealthChecks.NpgSql/9.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-v9UqyTFVO79tWVM2uRuUWgauZAAHdLxEqa1mujnztBbG5MzIy78ciN6fICfFAZPNJQydYmkZHqPx7/eIuJog9A==",
-      "path": "aspnetcore.healthchecks.mysql/9.0.0",
-      "hashPath": "aspnetcore.healthchecks.mysql.9.0.0.nupkg.sha512"
+      "sha512": "sha512-npc58/AD5zuVxERdhCl2Kb7WnL37mwX42SJcXIwvmEig0/dugOLg3SIwtfvvh3TnvTwR/sk5LYNkkPaBdks61A==",
+      "path": "aspnetcore.healthchecks.npgsql/9.0.0",
+      "hashPath": "aspnetcore.healthchecks.npgsql.9.0.0.nupkg.sha512"
     },
     "AspNetCore.HealthChecks.Uris/9.0.0": {
       "type": "package",
@@ -739,13 +739,6 @@
       "path": "microsoft.visualstudio.validation/17.8.8",
       "hashPath": "microsoft.visualstudio.validation.17.8.8.nupkg.sha512"
     },
-    "MySqlConnector/2.3.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-FYTnvNBbNSZotSWUerK22Ztsc3vx3wBRZ4veavkUbfCBNthtCr3CH5Wpoo4l5gBD2TmQD9JbL33Gf9kWko1yYw==",
-      "path": "mysqlconnector/2.3.1",
-      "hashPath": "mysqlconnector.2.3.1.nupkg.sha512"
-    },
     "Nerdbank.Streams/2.12.87": {
       "type": "package",
       "serviceable": true,
@@ -759,6 +752,13 @@
       "sha512": "sha512-pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A==",
       "path": "newtonsoft.json/13.0.4",
       "hashPath": "newtonsoft.json.13.0.4.nupkg.sha512"
+    },
+    "Npgsql/8.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-6WEmzsQJCZAlUG1pThKg/RmeF6V+I0DmBBBE/8YzpRtEzhyZzKcK7ulMANDm5CkxrALBEC8H+5plxHWtIL7xnA==",
+      "path": "npgsql/8.0.3",
+      "hashPath": "npgsql.8.0.3.nupkg.sha512"
     },
     "Polly.Core/8.6.4": {
       "type": "package",

@@ -1,11 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var mysql = builder.AddMySql("mysql")
-                   .WithDataVolume()
-                   .WithLifetime(ContainerLifetime.Persistent)
-                   .WithPhpMyAdmin();
+var postgres = builder.AddPostgres("postgres")
+                      .WithDataVolume()
+                      .WithLifetime(ContainerLifetime.Persistent)
+                      .WithPgAdmin();
 
-var database = mysql.AddDatabase("database");
+var database = postgres.AddDatabase("database");
 
 builder.AddProject<Projects.UTB_Library_DbManager>("dbmanager")
        .WithReference(database)
