@@ -28,7 +28,7 @@ app.MapGet("/api/meals/{id}", async (int id, CanteenContext db) =>
 
     return meal is null
         ? Results.NotFound()
-        : TypedResults.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
+        : Results.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
 });
 
 app.MapPost("/api/meals", async (CreateMealDto dto, CanteenContext db) =>
@@ -52,7 +52,7 @@ app.MapPut("/api/meals/{id}", async (int id, UpdateMealDto dto, CanteenContext d
 
     await db.SaveChangesAsync();
 
-    return TypedResults.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
+    return Results.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
 });
 
 // === MENU ITEMS ===
@@ -103,7 +103,7 @@ app.MapPut("/api/menu/{id}", async (int id, UpdateMenuItemDto dto, CanteenContex
 
     await db.SaveChangesAsync();
 
-    return TypedResults.Ok(new MenuItemDto(menuItem.Id, menuItem.Date, menuItem.AvailablePortions, menuItem.MealId, menuItem.Meal.Description));
+    return Results.Ok(new MenuItemDto(menuItem.Id, menuItem.Date, menuItem.AvailablePortions, menuItem.MealId, menuItem.Meal.Description));
 });
 
 app.MapDelete("/api/menu/{id}", async (int id, CanteenContext db) =>
@@ -114,7 +114,7 @@ app.MapDelete("/api/menu/{id}", async (int id, CanteenContext db) =>
     db.MenuItems.Remove(menuItem);
     await db.SaveChangesAsync();
 
-    return TypedResults.NoContent();
+    return Results.NoContent();
 });
 
 // === ORDERS ===
@@ -142,7 +142,7 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, CanteenContext db) =>
     db.Orders.Add(order);
     await db.SaveChangesAsync();
 
-    return TypedResults.Created($"/api/orders/{order.Id}",
+    return Results.Created($"/api/orders/{order.Id}",
         new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, menuItem.Meal.Description));
 });
 
@@ -158,7 +158,6 @@ app.MapPut("/api/orders/{id}/status", async (int id, UpdateOrderStatusDto dto, C
     if (!Enum.TryParse<OrderStatus>(dto.Status, true, out var newStatus))
         return Results.BadRequest("Invalid status value.");
 
-    // Validate state transitions
     var valid = (order.Status, newStatus) switch
     {
         (OrderStatus.Preparing, OrderStatus.Ready) => true,
@@ -174,8 +173,10 @@ app.MapPut("/api/orders/{id}/status", async (int id, UpdateOrderStatusDto dto, C
     order.Status = newStatus;
     await db.SaveChangesAsync();
 
-    return TypedResults.Ok(new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, order.MenuItem.Meal.Description));
+    return Results.Ok(new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, order.MenuItem.Meal.Description));
 });
 
 app.UseHttpsRedirection();
 app.Run();
+
+public partial class Program { }
