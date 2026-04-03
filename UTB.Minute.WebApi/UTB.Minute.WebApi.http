@@ -1,0 +1,156 @@
+# ==========================================
+# UTB.Minute - WebApi HTTP requests
+# ==========================================
+# Pred pouzitim:
+#   1. Spusti AppHost
+#   2. Skopiruj URL WebApi z Aspire dashboardu do @webApiUrl
+#   3. Skopiruj URL DbManager z Aspire dashboardu do @dbManagerUrl
+# ==========================================
+
+@webApiUrl = https://localhost:7107
+@dbManagerUrl = https://localhost:7076
+
+
+# ==========================================
+# DATABASE
+# ==========================================
+
+### Reset databazy (zmaze vsetko a vlozia sa testovacie data)
+POST {{dbManagerUrl}}/reset-db
+
+
+# ==========================================
+# JEDLA (Meals)
+# ==========================================
+
+### Zobraz vsetky jedla
+GET {{webApiUrl}}/api/meals
+
+### Zobraz jedno jedlo (zmen id)
+GET {{webApiUrl}}/api/meals/1
+
+### Vytvor nove jedlo
+POST {{webApiUrl}}/api/meals
+Content-Type: application/json
+
+{
+  "description": "Svickova na smetane",
+  "price": 145
+}
+
+### Uprav jedlo (zmen id)
+PUT {{webApiUrl}}/api/meals/1
+Content-Type: application/json
+
+{
+  "description": "Svickova na smetane",
+  "price": 150,
+  "isActive": true
+}
+
+### Deaktivuj jedlo (isActive = false)
+PUT {{webApiUrl}}/api/meals/1
+Content-Type: application/json
+
+{
+  "description": "Svickova na smetane",
+  "price": 150,
+  "isActive": false
+}
+
+
+# ==========================================
+# MENU (MenuItems)
+# ==========================================
+
+### Zobraz vsetky polozky menu (vsetky dni)
+GET {{webApiUrl}}/api/menu
+
+### Zobraz iba dnesne menu
+GET {{webApiUrl}}/api/menu/today
+
+### Vytvor novu polozku menu na dnes (mealId musi existovat v jedlach)
+POST {{webApiUrl}}/api/menu
+Content-Type: application/json
+
+{
+  "date": "2026-04-02",
+  "availablePortions": 10,
+  "mealId": 1
+}
+
+### Uprav polozku menu (zmen id)
+PUT {{webApiUrl}}/api/menu/1
+Content-Type: application/json
+
+{
+  "date": "2026-04-02",
+  "availablePortions": 5
+}
+
+### Zmaz polozku menu (zmen id)
+DELETE {{webApiUrl}}/api/menu/1
+
+
+# ==========================================
+# OBJEDNAVKY (Orders)
+# ==========================================
+
+### Zobraz vsetky objednavky
+GET {{webApiUrl}}/api/orders
+
+### Vytvor objednavku (menuItemId musi existovat v menu)
+POST {{webApiUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "menuItemId": 1
+}
+
+### Zmen stav na Ready (hotova)
+PUT {{webApiUrl}}/api/orders/1/status
+Content-Type: application/json
+
+{
+  "status": "Ready"
+}
+
+### Zmen stav na Cancelled (zrusena)
+PUT {{webApiUrl}}/api/orders/1/status
+Content-Type: application/json
+
+{
+  "status": "Cancelled"
+}
+
+### Zmen stav na Completed (dokoncena / vydana)
+PUT {{webApiUrl}}/api/orders/1/status
+Content-Type: application/json
+
+{
+  "status": "Completed"
+}
+
+
+# ==========================================
+# TESTOVANIE CHYB
+# ==========================================
+
+### Objednaj z vypredaneho jedla -> ocakavany vysledok: 400 "This meal is sold out."
+POST {{webApiUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "menuItemId": 3
+}
+
+### Neplatny prechod stavu (napr. Preparing -> Completed) -> ocakavany vysledok: 400
+PUT {{webApiUrl}}/api/orders/1/status
+Content-Type: application/json
+
+{
+  "status": "Completed"
+}
+
+### Jedlo ktore neexistuje -> ocakavany vysledok: 404
+GET {{webApiUrl}}/api/meals/999
