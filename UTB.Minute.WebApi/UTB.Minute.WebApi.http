@@ -10,6 +10,8 @@
 @webApiUrl = https://localhost:7107
 @dbManagerUrl = https://localhost:7076
 
+# @noRejectUnauthorized
+
 
 # ==========================================
 # DATABASE
@@ -34,7 +36,7 @@ POST {{webApiUrl}}/api/meals
 Content-Type: application/json
 
 {
-  "description": "Svickova na smetane",
+  "description": "Beef in cream sauce",
   "price": 145
 }
 
@@ -43,7 +45,7 @@ PUT {{webApiUrl}}/api/meals/1
 Content-Type: application/json
 
 {
-  "description": "Svickova na smetane",
+  "description": "Beef in cream sauce",
   "price": 150,
   "isActive": true
 }
@@ -53,7 +55,7 @@ PUT {{webApiUrl}}/api/meals/1
 Content-Type: application/json
 
 {
-  "description": "Svickova na smetane",
+  "description": "Beef in cream sauce",
   "price": 150,
   "isActive": false
 }
