@@ -1,9 +1,21 @@
+using Microsoft.Extensions.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres")
+IResourceBuilder<PostgresServerResource> postgres;
+
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    postgres = builder.AddPostgres("postgres-testing")
+                      .WithContainerName("postgres-testing-UTB.Minute");
+}
+else
+{
+    postgres = builder.AddPostgres("postgres")
                       .WithDataVolume()
                       .WithLifetime(ContainerLifetime.Persistent)
                       .WithPgAdmin();
+}
 
 var database = postgres.AddDatabase("database");
 
