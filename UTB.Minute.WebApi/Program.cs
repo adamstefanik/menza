@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using UTB.Minute.Contracts;
 using UTB.Minute.Db;
@@ -13,26 +14,50 @@ app.MapDefaultEndpoints();
 
 // === MEALS ===
 
-// TODO: maybe add filtering by isActive later
-app.MapGet("/api/meals", async (CanteenContext db) =>
+app.MapGet("/api/meals", GetMeals);
+app.MapGet("/api/meals/{id:int}", GetMeal);
+app.MapPost("/api/meals", CreateMeal);
+app.MapPut("/api/meals/{id:int}", UpdateMeal);
+
+// === MENU ITEMS ===
+
+app.MapGet("/api/menu", GetMenuItems);
+app.MapGet("/api/menu/today", GetTodayMenu);
+app.MapPost("/api/menu", CreateMenuItem);
+app.MapPut("/api/menu/{id:int}", UpdateMenuItem);
+app.MapDelete("/api/menu/{id:int}", DeleteMenuItem);
+
+// === ORDERS ===
+
+app.MapGet("/api/orders", GetOrders);
+app.MapPost("/api/orders", CreateOrder);
+app.MapPut("/api/orders/{id:int}/status", UpdateOrderStatus);
+
+app.UseHttpsRedirection();
+app.Run();
+
+// === MEAL HANDLERS ===
+
+static async Task<Ok<List<MealDto>>> GetMeals(CanteenContext db)
 {
     var meals = await db.Meals
         .Select(m => new MealDto(m.Id, m.Description, m.Price, m.IsActive))
         .ToListAsync();
 
     return TypedResults.Ok(meals);
-});
+}
 
-app.MapGet("/api/meals/{id}", async (int id, CanteenContext db) =>
+static async Task<Results<Ok<MealDto>, NotFound>> GetMeal(int id, CanteenContext db)
 {
-    var meal = await db.Meals.FindAsync(id);
+    if (await db.Meals.FindAsync(id) is Meal meal)
+    {
+        return TypedResults.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
+    }
 
-    return meal is null
-        ? Results.NotFound()
-        : Results.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
-});
+    return TypedResults.NotFound();
+}
 
-app.MapPost("/api/meals", async (CreateMealDto dto, CanteenContext db) =>
+static async Task<Created<MealDto>> CreateMeal(CreateMealDto dto, CanteenContext db)
 {
     var meal = new Meal { Description = dto.Description, Price = dto.Price };
 
@@ -40,25 +65,27 @@ app.MapPost("/api/meals", async (CreateMealDto dto, CanteenContext db) =>
     await db.SaveChangesAsync();
 
     return TypedResults.Created($"/api/meals/{meal.Id}", new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
-});
+}
 
-app.MapPut("/api/meals/{id}", async (int id, UpdateMealDto dto, CanteenContext db) =>
+static async Task<Results<Ok<MealDto>, NotFound>> UpdateMeal(int id, UpdateMealDto dto, CanteenContext db)
 {
-    var meal = await db.Meals.FindAsync(id);
-    if (meal is null) return Results.NotFound();
+    if (await db.Meals.FindAsync(id) is Meal meal)
+    {
+        meal.Description = dto.Description;
+        meal.Price = dto.Price;
+        meal.IsActive = dto.IsActive;
 
-    meal.Description = dto.Description;
-    meal.Price = dto.Price;
-    meal.IsActive = dto.IsActive;
+        await db.SaveChangesAsync();
 
-    await db.SaveChangesAsync();
+        return TypedResults.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
+    }
 
-    return Results.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
-});
+    return TypedResults.NotFound();
+}
 
-// === MENU ITEMS ===
+// === MENU ITEM HANDLERS ===
 
-app.MapGet("/api/menu", async (CanteenContext db) =>
+static async Task<Ok<List<MenuItemDto>>> GetMenuItems(CanteenContext db)
 {
     var items = await db.MenuItems
         .Include(mi => mi.Meal)
@@ -66,9 +93,9 @@ app.MapGet("/api/menu", async (CanteenContext db) =>
         .ToListAsync();
 
     return TypedResults.Ok(items);
-});
+}
 
-app.MapGet("/api/menu/today", async (CanteenContext db) =>
+static async Task<Ok<List<MenuItemDto>>> GetTodayMenu(CanteenContext db)
 {
     var today = DateOnly.FromDateTime(DateTime.Today);
 
@@ -79,9 +106,9 @@ app.MapGet("/api/menu/today", async (CanteenContext db) =>
         .ToListAsync();
 
     return TypedResults.Ok(items);
-});
+}
 
-app.MapPost("/api/menu", async (CreateMenuItemDto dto, CanteenContext db) =>
+static async Task<Created<MenuItemDto>> CreateMenuItem(CreateMenuItemDto dto, CanteenContext db)
 {
     var menuItem = new MenuItem { Date = dto.Date, AvailablePortions = dto.AvailablePortions, MealId = dto.MealId };
 
@@ -92,36 +119,41 @@ app.MapPost("/api/menu", async (CreateMenuItemDto dto, CanteenContext db) =>
 
     return TypedResults.Created($"/api/menu/{menuItem.Id}",
         new MenuItemDto(created.Id, created.Date, created.AvailablePortions, created.MealId, created.Meal.Description));
-});
+}
 
-app.MapPut("/api/menu/{id}", async (int id, UpdateMenuItemDto dto, CanteenContext db) =>
+static async Task<Results<Ok<MenuItemDto>, NotFound>> UpdateMenuItem(int id, UpdateMenuItemDto dto, CanteenContext db)
 {
     var menuItem = await db.MenuItems.Include(mi => mi.Meal).FirstOrDefaultAsync(mi => mi.Id == id);
-    if (menuItem is null) return Results.NotFound();
 
-    menuItem.Date = dto.Date;
-    menuItem.AvailablePortions = dto.AvailablePortions;
+    if (menuItem is not null)
+    {
+        menuItem.Date = dto.Date;
+        menuItem.AvailablePortions = dto.AvailablePortions;
 
-    await db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
-    return Results.Ok(new MenuItemDto(menuItem.Id, menuItem.Date, menuItem.AvailablePortions, menuItem.MealId, menuItem.Meal.Description));
-});
+        return TypedResults.Ok(new MenuItemDto(menuItem.Id, menuItem.Date, menuItem.AvailablePortions, menuItem.MealId, menuItem.Meal.Description));
+    }
 
-app.MapDelete("/api/menu/{id}", async (int id, CanteenContext db) =>
+    return TypedResults.NotFound();
+}
+
+static async Task<Results<NoContent, NotFound>> DeleteMenuItem(int id, CanteenContext db)
 {
-    var menuItem = await db.MenuItems.FindAsync(id);
-    if (menuItem is null) return Results.NotFound();
+    if (await db.MenuItems.FindAsync(id) is MenuItem menuItem)
+    {
+        db.MenuItems.Remove(menuItem);
+        await db.SaveChangesAsync();
 
-    db.MenuItems.Remove(menuItem);
-    await db.SaveChangesAsync();
+        return TypedResults.NoContent();
+    }
 
-    return Results.NoContent();
-});
+    return TypedResults.NotFound();
+}
 
-// === ORDERS ===
+// === ORDER HANDLERS ===
 
-// TODO: filter only non-completed orders for the cook view
-app.MapGet("/api/orders", async (CanteenContext db) =>
+static async Task<Ok<List<OrderDto>>> GetOrders(CanteenContext db)
 {
     var orders = await db.Orders
         .Include(o => o.MenuItem)
@@ -130,13 +162,21 @@ app.MapGet("/api/orders", async (CanteenContext db) =>
         .ToListAsync();
 
     return TypedResults.Ok(orders);
-});
+}
 
-app.MapPost("/api/orders", async (CreateOrderDto dto, CanteenContext db) =>
+static async Task<Results<Created<OrderDto>, NotFound, BadRequest<string>>> CreateOrder(CreateOrderDto dto, CanteenContext db)
 {
     var menuItem = await db.MenuItems.Include(mi => mi.Meal).FirstOrDefaultAsync(mi => mi.Id == dto.MenuItemId);
-    if (menuItem == null) return Results.NotFound();
-    if (menuItem.AvailablePortions <= 0) return Results.BadRequest("This meal is sold out.");
+
+    if (menuItem is null)
+    {
+        return TypedResults.NotFound();
+    }
+
+    if (menuItem.AvailablePortions <= 0)
+    {
+        return TypedResults.BadRequest("This meal is sold out.");
+    }
 
     menuItem.AvailablePortions--;
 
@@ -144,21 +184,26 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, CanteenContext db) =>
     db.Orders.Add(order);
     await db.SaveChangesAsync();
 
-    return Results.Created($"/api/orders/{order.Id}",
+    return TypedResults.Created($"/api/orders/{order.Id}",
         new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, menuItem.Meal.Description));
-});
+}
 
-app.MapPut("/api/orders/{id}/status", async (int id, UpdateOrderStatusDto dto, CanteenContext db) =>
+static async Task<Results<Ok<OrderDto>, NotFound, BadRequest<string>>> UpdateOrderStatus(int id, UpdateOrderStatusDto dto, CanteenContext db)
 {
     var order = await db.Orders
         .Include(o => o.MenuItem)
         .ThenInclude(mi => mi.Meal)
         .FirstOrDefaultAsync(o => o.Id == id);
 
-    if (order is null) return Results.NotFound();
+    if (order is null)
+    {
+        return TypedResults.NotFound();
+    }
 
     if (!Enum.TryParse<OrderStatus>(dto.Status, true, out var newStatus))
-        return Results.BadRequest("Invalid status value.");
+    {
+        return TypedResults.BadRequest("Invalid status value.");
+    }
 
     var valid = (order.Status, newStatus) switch
     {
@@ -170,15 +215,14 @@ app.MapPut("/api/orders/{id}/status", async (int id, UpdateOrderStatusDto dto, C
     };
 
     if (!valid)
-        return Results.BadRequest($"Cannot transition from {order.Status} to {newStatus}.");
+    {
+        return TypedResults.BadRequest($"Cannot transition from {order.Status} to {newStatus}.");
+    }
 
     order.Status = newStatus;
     await db.SaveChangesAsync();
 
-    return Results.Ok(new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, order.MenuItem.Meal.Description));
-});
-
-app.UseHttpsRedirection();
-app.Run();
+    return TypedResults.Ok(new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, order.MenuItem.Meal.Description));
+}
 
 public partial class Program { }
