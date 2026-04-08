@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using UTB.Minute.Contracts;
-using UTB.Minute.Db;
+using UTB.Minute.Contracts; // for users
+using UTB.Minute.Db; // for backend
 
 var builder = WebApplication.CreateBuilder(args);
 
