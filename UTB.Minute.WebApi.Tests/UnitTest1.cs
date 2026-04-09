@@ -27,7 +27,7 @@ public class TestFixture : IAsyncLifetime
         await app.ResourceNotifications.WaitForResourceHealthyAsync("webapi");
 
         connectionString = await app.GetConnectionStringAsync("database");
-        HttpClient = app.CreateHttpClient("webapi", "https");
+        HttpClient = app.CreateHttpClient("webapi", "http");
 
         using var context = CreateContext();
 
