@@ -1,87 +1,83 @@
-# UTB.Minute
-
-Objednavaci system pre menzu. Semestralny projekt pre predmet **Aplikacne frameworky** na UTB.
+# Menza
+Objednávací systém pre našu menzu.
 
 ## Popis
+Systém je navrhnutý na efektívnu správu a objednávanie jedál na objednávku - minútiek.
 
-System umoznuje objednavanie minutek (jedal pripravenych na objednavku) v menze. Student si objedna jedlo vo webovej aplikacii, kucharky menia stav objednavky a student je o stave informovany.
+1. Študent si vyberie jedlo z aktuálneho menu cez webovú aplikáciu(todo).
+2. Kuchyňa príjme objednávku a mení jej stav v reálnom čase.
+3. Študent je informovaný o stave.
 
-## Technologie
+## Stack
 
-- .NET 10
-- .NET Aspire (orchestracia, service discovery)
-- Minimal Web API s TypedResults
-- Entity Framework Core + PostgreSQL
-- xUnit + Aspire.Hosting.Testing
+- Runtime: .NET 10
+- Orchestrácia: .NET Aspire
+- API: Minimal Web API s využitím TypedResults
+- Databáza: Entity Framework Core + PostgreSQL
+- Testovanie: xUnit + Aspire.Hosting.Testing
 
-## Struktura projektu
+## Štruktúra
 
-| Projekt | Popis |
-|---------|-------|
-| `UTB.Minute.AppHost` | Aspire orchestracia (PostgreSQL, service discovery) |
-| `UTB.Minute.ServiceDefaults` | Zdielana konfiguracia (health checks, telemetria) |
-| `UTB.Minute.Db` | Entity a `CanteenContext` (DbContext) |
-| `UTB.Minute.Contracts` | DTO definovane ako `record` |
-| `UTB.Minute.WebApi` | REST API endpointy |
-| `UTB.Minute.DbManager` | Http Command pre reset a seed databazy |
-| `UTB.Minute.WebApi.Tests` | Integracne testy |
+```
+UTB.Minute/
+├── UTB.Minute.WebApi.Tests/
+├── UTB.Minute.WebApi/
+├── UTB.Minute.DbManager/
+├── UTB.Minute.AppHost/
+├── UTB.Minute.ServiceDefaults/
+├── UTB.Minute.Db/
+├── UTB.Minute.Contracts/
+├── README.md
+├── global.json
+└── UTB.Minute.sln
+```
 
-## Datovy model
+## Dátový model & Stavový stroj
 
-- **Meal** — jedlo (popis, cena, aktivne/neaktivne)
-- **MenuItem** — polozka menu (datum, pocet porcii, vaazba na Meal)
-- **Order** — objednavka (stav, cas vytvorenia, vaazba na MenuItem)
-- **OrderStatus** — enum: `Preparing`, `Ready`, `Cancelled`, `Completed`
+Entity:
+- Meal
+- MenuItem – Ponuka v daný deň
+- Order
 
-Relacie: `Meal` 1:N `MenuItem` 1:N `Order`
+Životný cyklus objednávky:
+Systém prísne stráži prechody medzi stavmi (napr. nie je možné zrušiť objednávku, ktorá už bola vydaná):
+- Preparing ➔ Ready ➔ Completed > Preparing ➔ Cancelled ➔ Completed
 
 ## API endpointy
 
-| Metoda | URL | Popis |
+| Metóda | URL | Popis |
 |--------|-----|-------|
-| GET | `/api/meals` | Vsetky jedla |
-| GET | `/api/meals/{id}` | Jedlo podla Id |
+| GET | `/api/meals` | Všetky jedlá |
+| GET | `/api/meals/{id}` | Jedlo podľa Id |
 | POST | `/api/meals` | Vytvorenie jedla |
-| PUT | `/api/meals/{id}` | Uprava jedla |
-| GET | `/api/menu` | Vsetky polozky menu |
-| GET | `/api/menu/today` | Dnesne menu |
-| POST | `/api/menu` | Vytvorenie polozky menu |
-| PUT | `/api/menu/{id}` | Uprava polozky menu |
-| DELETE | `/api/menu/{id}` | Zmazanie polozky menu |
-| GET | `/api/orders` | Vsetky objednavky |
-| POST | `/api/orders` | Vytvorenie objednavky |
-| PUT | `/api/orders/{id}/status` | Zmena stavu objednavky |
+| PUT | `/api/meals/{id}` | Úprava jedla |
+| GET | `/api/menu` | Všetky položky menu |
+| GET | `/api/menu/today` | Dnešné menu |
+| POST | `/api/menu` | Vytvorenie položky menu |
+| PUT | `/api/menu/{id}` | Úprava položky menu |
+| DELETE | `/api/menu/{id}` | Zmazanie položky menu |
+| GET | `/api/orders` | Všetky objednávky |
+| POST | `/api/orders` | Vytvorenie objednávky |
+| PUT | `/api/orders/{id}/status` | Zmena stavu objednávky |
 
-## Stavy objednavky
+## Architektúra
 
-```
-Preparing --> Ready --> Completed
-Preparing --> Cancelled --> Completed
-```
+- **Minimal API** — všetky endpointy sú v jednom súbore `Program.cs` ako pomenované statické metódy.
+- **TypedResults** — návratové typy endpointov sú explicitne definované (napr. `Results<Ok<MealDto>, NotFound>`).
+- **Record pre DTO** — immutable, štrukturálna rovnosť, stručný zápis.
+- **Enum pre stav objednávky** — typovo bezpečné, nemožno zadať neplatný stav.
+- **Aspire.Hosting.Testing** — testy bežia oproti PostgreSQL databáze spustenej cez Aspire.
 
-Neplatne prechody su blokovane (napr. z `Ready` na `Cancelled`).
+## Requirements and Run
 
-## Architektonicke rozhodnutia
-
-- **Minimal API** namiesto controllerov — menej boilerplate kodu, vsetky endpointy su v jednom subore `Program.cs` ako pomenovane staticke metody.
-- **TypedResults** — navratove typy endpointov su explicitne definovane (napr. `Results<Ok<MealDto>, NotFound>`), co zlepuje dokumentaciu API.
-- **Record pre DTO** — immutable, struktualny equality, stiahlly zapis.
-- **Enum pre stav objednavky** — typ-bezpecne, nemozno zadat neplatny stav.
-- **Aspire.Hosting.Testing** — testy bzia oproti realnej PostgreSQL databaze spustenej cez Aspire, nie InMemory.
-
-## Spustenie
-
-Poziadavky: .NET 10 SDK, Docker
+- .NET 10+
+- Docker
 
 ```
 dotnet run --project UTB.Minute.AppHost
 ```
 
-Aspire dashboard zobrazi vsetky sluzby. Pre reset databazy pouzite Http Command "Reset Database" v dashboarde alebo:
-
-```
-POST https://localhost:{port}/reset-db
-```
+Aspire dashboard zobrazí všetky služby.
 
 ## Spustenie testov
 
@@ -93,4 +89,4 @@ Testy automaticky spustia PostgreSQL kontajner cez Aspire.
 
 ## Pomer prace v time
 
-1:1:1
+1:1
