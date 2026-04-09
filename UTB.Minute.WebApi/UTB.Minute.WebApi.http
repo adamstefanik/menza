@@ -1,11 +1,8 @@
-# ==========================================
-# UTB.Minute - WebApi HTTP requests
-# ==========================================
-# Pred pouzitim:
-#   1. Spusti AppHost
-#   2. Skopiruj URL WebApi z Aspire dashboardu do @webApiUrl
-#   3. Skopiruj URL DbManager z Aspire dashboardu do @dbManagerUrl
-# ==========================================
+
+# Pred použitím:
+# 1. Spusti AppHost
+# 2. Skopiruj URL WebApi z Aspire dashboardu do @webApiUrl
+# 3. Skopiruj URL DbManager z Aspire dashboardu do @dbManagerUrl
 
 @webApiUrl = https://localhost:7107
 @dbManagerUrl = https://localhost:7076
@@ -13,17 +10,16 @@
 # @noRejectUnauthorized
 
 
-# ==========================================
-# DATABASE
-# ==========================================
+
+# Db
+# --------------------------------
 
 ### Reset databazy (zmaze vsetko a vlozia sa testovacie data)
 POST {{dbManagerUrl}}/reset-db
 
 
-# ==========================================
-# JEDLA (Meals)
-# ==========================================
+# Meals
+# --------------------------------
 
 ### Zobraz vsetky jedla
 GET {{webApiUrl}}/api/meals
@@ -61,9 +57,8 @@ Content-Type: application/json
 }
 
 
-# ==========================================
-# MENU (MenuItems)
-# ==========================================
+# Menu
+# --------------------------------
 
 ### Zobraz vsetky polozky menu (vsetky dni)
 GET {{webApiUrl}}/api/menu
@@ -94,9 +89,8 @@ Content-Type: application/json
 DELETE {{webApiUrl}}/api/menu/1
 
 
-# ==========================================
 # OBJEDNAVKY (Orders)
-# ==========================================
+# --------------------------------
 
 ### Zobraz vsetky objednavky
 GET {{webApiUrl}}/api/orders
@@ -134,11 +128,10 @@ Content-Type: application/json
 }
 
 
-# ==========================================
-# TESTOVANIE CHYB
-# ==========================================
+# Tests
+# --------------------------------
 
-### Objednaj z vypredaneho jedla -> ocakavany vysledok: 400 "This meal is sold out."
+### Objednaj z vypredaneho jedla (ocakavany 400)
 POST {{webApiUrl}}/api/orders
 Content-Type: application/json
 
@@ -146,7 +139,7 @@ Content-Type: application/json
   "menuItemId": 3
 }
 
-### Neplatny prechod stavu (napr. Preparing -> Completed) -> ocakavany vysledok: 400
+### Neplatny prechod stavu (ocakavany 400)
 PUT {{webApiUrl}}/api/orders/1/status
 Content-Type: application/json
 
@@ -154,5 +147,5 @@ Content-Type: application/json
   "status": "Completed"
 }
 
-### Jedlo ktore neexistuje -> ocakavany vysledok: 404
+### Jedlo ktore neexistuje (ocakavany 404)
 GET {{webApiUrl}}/api/meals/999
