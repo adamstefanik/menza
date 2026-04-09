@@ -12,14 +12,14 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-// === MEALS ===
+// MEALS 
 
 app.MapGet("/api/meals", GetMeals);
 app.MapGet("/api/meals/{id:int}", GetMeal);
 app.MapPost("/api/meals", CreateMeal);
 app.MapPut("/api/meals/{id:int}", UpdateMeal);
 
-// === MENU ITEMS ===
+// MENU ITEMS
 
 app.MapGet("/api/menu", GetMenuItems);
 app.MapGet("/api/menu/today", GetTodayMenu);
@@ -27,7 +27,7 @@ app.MapPost("/api/menu", CreateMenuItem);
 app.MapPut("/api/menu/{id:int}", UpdateMenuItem);
 app.MapDelete("/api/menu/{id:int}", DeleteMenuItem);
 
-// === ORDERS ===
+// ORDERS
 
 app.MapGet("/api/orders", GetOrders);
 app.MapPost("/api/orders", CreateOrder);
@@ -36,7 +36,7 @@ app.MapPut("/api/orders/{id:int}/status", UpdateOrderStatus);
 app.UseHttpsRedirection();
 app.Run();
 
-// === MEAL HANDLERS ===
+// MEAL HANDLERS
 
 static async Task<Ok<List<MealDto>>> GetMeals(CanteenContext db)
 {
@@ -83,7 +83,7 @@ static async Task<Results<Ok<MealDto>, NotFound>> UpdateMeal(int id, UpdateMealD
     return TypedResults.NotFound();
 }
 
-// === MENU ITEM HANDLERS ===
+// MENU ITEM HANDLERS
 
 static async Task<Ok<List<MenuItemDto>>> GetMenuItems(CanteenContext db)
 {
@@ -151,7 +151,7 @@ static async Task<Results<NoContent, NotFound>> DeleteMenuItem(int id, CanteenCo
     return TypedResults.NotFound();
 }
 
-// === ORDER HANDLERS ===
+// ORDER HANDLERS
 
 static async Task<Ok<List<OrderDto>>> GetOrders(CanteenContext db)
 {
