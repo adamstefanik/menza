@@ -90,5 +90,3 @@ Testy automaticky spustia PostgreSQL kontajner cez Aspire.
 ## Pomer prace v time
 
 1:1
-
-TESTTTT
