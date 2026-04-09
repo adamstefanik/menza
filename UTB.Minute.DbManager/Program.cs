@@ -18,7 +18,7 @@ app.MapPost("/reset-db", async (CanteenContext context) =>
     var meal1 = new Meal { Description = "Chicken schnitzel", Price = 120 };
     var meal2 = new Meal { Description = "Beef goulash", Price = 135 };
     var meal3 = new Meal { Description = "Pasta with tomato sauce", Price = 95 };
-    var meal4 = new Meal { Description = "Fish and chips", Price = 115, IsActive = false }; // inactive meal for testing
+    var meal4 = new Meal { Description = "Fish and chips", Price = 115, IsActive = false }; // test meals
 
     context.Meals.AddRange(meal1, meal2, meal3, meal4);
     await context.SaveChangesAsync();
@@ -40,7 +40,7 @@ app.MapPost("/reset-db", async (CanteenContext context) =>
     context.Orders.AddRange(order1, order2);
     await context.SaveChangesAsync();
 
-    return Results.Ok("Database has been reset and seeded successfully.");
+    return Results.Ok("Database reset completed.");
 });
 
 app.UseHttpsRedirection();
