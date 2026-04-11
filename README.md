@@ -1,4 +1,10 @@
 # Menza
+
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
+![Aspire](https://img.shields.io/badge/.NET_Aspire-13-512BD4?logo=dotnet)
+![xUnit](https://img.shields.io/badge/xUnit-2.9-green)
+
 Objednávací systém pre našu menzu.
 
 ## Popis
