@@ -146,6 +146,26 @@ public class CanteenApiTests(TestFixture fixture)
     }
 
     [Fact]
+    public async Task PatchMealDeactivate_DeactivatesMeal()
+    {
+        var created = await (await fixture.HttpClient.PostAsJsonAsync(
+            "/api/meals",
+            new CreateMealDto($"Meal {Guid.NewGuid()}", 100m)))
+            .Content.ReadFromJsonAsync<MealDto>();
+
+        var response = await fixture.HttpClient.PatchAsync($"/api/meals/{created!.Id}/deactivate", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using var context = fixture.CreateContext();
+
+        Meal? persisted = await context.Meals.FindAsync(created.Id);
+
+        Assert.NotNull(persisted);
+        Assert.False(persisted.IsActive);
+    }
+
+    [Fact]
     public async Task GetMeal_ReturnsNotFound_WhenMealDoesNotExist()
     {
         var response = await fixture.HttpClient.GetAsync("/api/meals/99999");
