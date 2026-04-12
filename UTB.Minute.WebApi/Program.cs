@@ -18,6 +18,7 @@ app.MapGet("/api/meals", GetMeals);
 app.MapGet("/api/meals/{id:int}", GetMeal);
 app.MapPost("/api/meals", CreateMeal);
 app.MapPut("/api/meals/{id:int}", UpdateMeal);
+app.MapPatch("/api/meals/{id:int}/deactivate", DeactivateMeal);
 
 // MENU ITEMS
 
@@ -90,6 +91,19 @@ static async Task<Results<Ok<MealDto>, NotFound, BadRequest<string>>> UpdateMeal
         await db.SaveChangesAsync();
 
         return TypedResults.Ok(new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
+    }
+
+    return TypedResults.NotFound();
+}
+
+static async Task<Results<NoContent, NotFound>> DeactivateMeal(int id, CanteenContext db)
+{
+    if (await db.Meals.FindAsync(id) is Meal meal)
+    {
+        meal.IsActive = false;
+        await db.SaveChangesAsync();
+
+        return TypedResults.NoContent();
     }
 
     return TypedResults.NotFound();
