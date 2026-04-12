@@ -57,8 +57,14 @@ static async Task<Results<Ok<MealDto>, NotFound>> GetMeal(int id, CanteenContext
     return TypedResults.NotFound();
 }
 
-static async Task<Created<MealDto>> CreateMeal(CreateMealDto dto, CanteenContext db)
+static async Task<Results<Created<MealDto>, BadRequest<string>>> CreateMeal(CreateMealDto dto, CanteenContext db)
 {
+    if (string.IsNullOrWhiteSpace(dto.Description))
+        return TypedResults.BadRequest("Description is required.");
+
+    if (dto.Price <= 0)
+        return TypedResults.BadRequest("Price must be greater than zero.");
+
     var meal = new Meal { Description = dto.Description, Price = dto.Price };
 
     db.Meals.Add(meal);
@@ -67,8 +73,14 @@ static async Task<Created<MealDto>> CreateMeal(CreateMealDto dto, CanteenContext
     return TypedResults.Created($"/api/meals/{meal.Id}", new MealDto(meal.Id, meal.Description, meal.Price, meal.IsActive));
 }
 
-static async Task<Results<Ok<MealDto>, NotFound>> UpdateMeal(int id, UpdateMealDto dto, CanteenContext db)
+static async Task<Results<Ok<MealDto>, NotFound, BadRequest<string>>> UpdateMeal(int id, UpdateMealDto dto, CanteenContext db)
 {
+    if (string.IsNullOrWhiteSpace(dto.Description))
+        return TypedResults.BadRequest("Description is required.");
+
+    if (dto.Price <= 0)
+        return TypedResults.BadRequest("Price must be greater than zero.");
+
     if (await db.Meals.FindAsync(id) is Meal meal)
     {
         meal.Description = dto.Description;
@@ -108,8 +120,11 @@ static async Task<Ok<List<MenuItemDto>>> GetTodayMenu(CanteenContext db)
     return TypedResults.Ok(items);
 }
 
-static async Task<Created<MenuItemDto>> CreateMenuItem(CreateMenuItemDto dto, CanteenContext db)
+static async Task<Results<Created<MenuItemDto>, BadRequest<string>>> CreateMenuItem(CreateMenuItemDto dto, CanteenContext db)
 {
+    if (dto.AvailablePortions < 0)
+        return TypedResults.BadRequest("AvailablePortions cannot be negative.");
+
     var menuItem = new MenuItem { Date = dto.Date, AvailablePortions = dto.AvailablePortions, MealId = dto.MealId };
 
     db.MenuItems.Add(menuItem);
@@ -121,9 +136,12 @@ static async Task<Created<MenuItemDto>> CreateMenuItem(CreateMenuItemDto dto, Ca
         new MenuItemDto(created.Id, created.Date, created.AvailablePortions, created.MealId, created.Meal.Description));
 }
 
-static async Task<Results<Ok<MenuItemDto>, NotFound>> UpdateMenuItem(int id, UpdateMenuItemDto dto, CanteenContext db)
+static async Task<Results<Ok<MenuItemDto>, NotFound, BadRequest<string>>> UpdateMenuItem(int id, UpdateMenuItemDto dto, CanteenContext db)
 {
     var menuItem = await db.MenuItems.Include(mi => mi.Meal).FirstOrDefaultAsync(mi => mi.Id == id);
+
+    if (dto.AvailablePortions < 0)
+        return TypedResults.BadRequest("AvailablePortions cannot be negative.");
 
     if (menuItem is not null)
     {
