@@ -1,0 +1,104 @@
+@page "/edit-menu-item/{id:int}"
+@using UTB.Minute.AdminClient.Services
+@using UTB.Minute.Contracts
+@inject IMenuClient MenuClient
+@inject NavigationManager Nav
+
+@rendermode InteractiveServer
+
+<PageTitle>Upraviť položku menu</PageTitle>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h3 class="mb-0">Upraviť položku menu</h3>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            @if (menuItem == null)
+            {
+                <p>Načítavam...</p>
+            }
+            else
+            {
+                <EditForm Model="@formModel" OnValidSubmit="HandleSave" FormName="EditMenuItemForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dátum:</label>
+                        <InputDate class="form-control" @bind-Value="formModel.Date" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dostupné porcie:</label>
+                        <InputNumber class="form-control" @bind-Value="formModel.AvailablePortions" min="0" />
+                    </div>
+
+                    <div class="d-flex gap-2 border-top pt-3">
+                        <button type="submit" class="btn btn-primary">Uložiť zmeny</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/menu")'>Zrušiť</button>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private MenuItemDto? menuItem;
+    private FormModel formModel = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var allItems = await MenuClient.GetMenuItemsAsync();
+            menuItem = allItems.FirstOrDefault(i => i.Id == Id);
+            
+            if (menuItem != null)
+            {
+                formModel.Date = menuItem.Date.ToDateTime(TimeOnly.MinValue);
+                formModel.AvailablePortions = menuItem.AvailablePortions;
+            }
+            else
+            {
+                errorMessage = "Položka nebola nájdená.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Chyba: {ex.Message}";
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        errorMessage = null;
+        
+        try 
+        {
+            var dto = new UpdateMenuItemDto(
+                DateOnly.FromDateTime(formModel.Date), 
+                formModel.AvailablePortions);
+                
+            await MenuClient.UpdateMenuItemAsync(Id, dto);
+            Nav.NavigateTo("/menu");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Chyba pri ukladaní: {ex.Message}";
+        }
+    }
+
+    private class FormModel 
+    {
+        public DateTime Date { get; set; } = DateTime.Today;
+        public int AvailablePortions { get; set; } = 10;
+    }
+}

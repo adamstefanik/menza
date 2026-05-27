@@ -1,0 +1,144 @@
+@page "/"
+@using UTB.Minute.CanteenClient.Services
+@using UTB.Minute.Contracts
+@inject IOrderClient OrderClient
+
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Dnešné menu</h1>
+    <span class="text-muted">@DateTime.Today.ToString("dd.MM.yyyy")</span>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (menuItems == null)
+{
+    <p>Načítavam...</p>
+}
+else if (!menuItems.Any())
+{
+    <div class="alert alert-info">Dnes nie je k dispozícii žiadne menu.</div>
+}
+else
+{
+    <div class="row">
+        @foreach (var item in menuItems)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card @(item.AvailablePortions <= 0 ? "border-secondary bg-light opacity-50" : "")">
+                    <div class="card-body">
+                        <h5 class="card-title @(item.AvailablePortions <= 0 ? "text-decoration-line-through text-muted" : "")">
+                            @item.MealDescription
+                        </h5>
+                        <p class="card-text">
+                            @if (item.AvailablePortions <= 0)
+                            {
+                                <span class="badge bg-danger">VYPREDANÉ</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-primary">@item.AvailablePortions porcií</span>
+                            }
+                        </p>
+                        <button class="btn @(item.AvailablePortions <= 0 ? "btn-secondary" : "btn-success")" 
+                                @onclick="() => Order(item.Id)" 
+                                disabled="@(item.AvailablePortions <= 0)">
+                            @(item.AvailablePortions <= 0 ? "Vypredané" : "Objednať")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<h3 class="mt-4">Moje objednávky</h3>
+
+@if (myOrders == null)
+{
+    <p>Načítavam...</p>
+}
+else if (!myOrders.Any())
+{
+    <p>Zatiaľ nemáš žiadne objednávky.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Jedlo</th>
+                <th>Stav</th>
+                <th>Dátum</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in myOrders)
+            {
+                <tr>
+                    <td>@order.MealDescription</td>
+                    <td>
+                        <span class="badge @GetStatusClass(order.Status)">@order.Status</span>
+                    </td>
+                    <td>@order.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<MenuItemDto>? menuItems;
+    private List<OrderDto>? myOrders;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var menu = await OrderClient.GetTodayMenuAsync();
+        menuItems = menu?.ToList();
+
+        var orders = await OrderClient.GetMyOrdersAsync();
+        myOrders = orders?.ToList();
+    }
+
+    private async Task Order(int menuItemId)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            await OrderClient.CreateOrderAsync(menuItemId);
+            successMessage = "Objednávka bola vytvorená!";
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Chyba: {ex.Message}";
+        }
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Preparing" => "bg-warning text-dark",
+        "Ready" => "bg-info",
+        "Completed" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
