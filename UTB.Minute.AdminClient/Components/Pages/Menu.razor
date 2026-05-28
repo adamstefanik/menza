@@ -1,0 +1,99 @@
+@page "/menu"
+@using UTB.Minute.AdminClient.Services
+@using UTB.Minute.Contracts
+@inject IMenuClient MenuClient
+@inject NavigationManager Nav
+
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Správa menu</h1>
+    <a href="/add-menu-item" class="btn btn-success">+ Pridať do menu</a>
+</div>
+
+<h4>Dnešné menu (@DateTime.Today.ToString("dd.MM.yyyy"))</h4>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Jedlo</th>
+            <th>Dostupné porcie</th>
+            <th>Akcia</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (todayMenu != null)
+        {
+            @foreach (var item in todayMenu)
+            {
+                <tr>
+                    <td>@item.MealDescription</td>
+                    <td>@item.AvailablePortions</td>
+                    <td>
+                        <a href="/edit-menu-item/@item.Id" class="btn btn-warning btn-sm">Upraviť</a>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="3">Načítavam...</td></tr>
+        }
+    </tbody>
+</table>
+
+<h4 class="mt-4">Všetky položky menu</h4>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Dátum</th>
+            <th>Jedlo</th>
+            <th>Dostupné porcie</th>
+            <th>Akcia</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (allMenu != null)
+        {
+            @foreach (var item in allMenu)
+            {
+                <tr>
+                    <td>@item.Date.ToString("dd.MM.yyyy")</td>
+                    <td>@item.MealDescription</td>
+                    <td>@item.AvailablePortions</td>
+                    <td>
+                        <a href="/edit-menu-item/@item.Id" class="btn btn-warning btn-sm">Upraviť</a>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<MenuItemDto>? todayMenu;
+    private List<MenuItemDto>? allMenu;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var today = await MenuClient.GetTodayMenuAsync();
+        todayMenu = today?.ToList();
+
+        var all = await MenuClient.GetMenuItemsAsync();
+        allMenu = all?.ToList();
+    }
+
+    private async Task Delete(int id)
+    {
+        await MenuClient.DeleteMenuItemAsync(id);
+        await LoadData();
+    }
+}

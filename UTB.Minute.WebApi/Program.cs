@@ -10,7 +10,12 @@ builder.AddNpgsqlDbContext<CanteenContext>("database");
 
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
+using (var scope = app.Services.CreateScope())
+{
+    
+    var context = scope.ServiceProvider.GetRequiredService<CanteenContext>();
+    context.Database.EnsureCreated();
+}
 
 // MEALS 
 
@@ -27,6 +32,14 @@ app.MapGet("/api/menu/today", GetTodayMenu);
 app.MapPost("/api/menu", CreateMenuItem);
 app.MapPut("/api/menu/{id:int}", UpdateMenuItem);
 app.MapDelete("/api/menu/{id:int}", DeleteMenuItem);
+app.MapDelete("/api/meals/{id:int}", async (int id, UTB.Minute.Db.CanteenContext db) =>
+{
+    var meal = await db.Meals.FindAsync(id);
+    if (meal is null) return Results.NotFound();
+    db.Meals.Remove(meal);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
 
 // ORDERS
 

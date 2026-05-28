@@ -29,4 +29,12 @@ var webApi = builder.AddProject<Projects.UTB_Minute_WebApi>("webapi")
     .WaitFor(database)
     .WaitFor(dbManager);
 
+builder.AddProject<Projects.UTB_Minute_AdminClient>("adminclient")
+    .WithReference(webApi) 
+    .WithExternalHttpEndpoints();
+
+builder.AddProject<Projects.UTB_Minute_CanteenClient>("canteenclient")
+    .WithReference(webApi)
+    .WithExternalHttpEndpoints();
+
 builder.Build().Run();

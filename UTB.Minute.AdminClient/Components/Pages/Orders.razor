@@ -1,0 +1,105 @@
+@page "/orders"
+@using UTB.Minute.AdminClient.Services
+@using UTB.Minute.Contracts
+@inject IOrderClient OrderClient
+
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Správa objednávok</h1>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (orders == null)
+{
+    <p>Načítavam...</p>
+}
+else if (!orders.Any())
+{
+    <div class="alert alert-info">Žiadne objednávky.</div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Jedlo</th>
+                <th>Stav</th>
+                <th>Dátum</th>
+                <th>Akcia</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in orders)
+            {
+                <tr>
+                    <td>@order.Id</td>
+                    <td>@order.MealDescription</td>
+                    <td>
+                        <span class="badge @GetStatusClass(order.Status)">@order.Status</span>
+                    </td>
+                    <td>@order.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        @if (order.Status == "Preparing")
+                        {
+                            <button class="btn btn-info btn-sm" @onclick='() => UpdateStatus(order.Id, "Ready")'>Pripravené</button>
+                            <button class="btn btn-danger btn-sm" @onclick='() => UpdateStatus(order.Id, "Cancelled")'>Zrušiť</button>
+                        }
+                        else if (order.Status == "Ready")
+                        {
+                            <button class="btn btn-success btn-sm" @onclick='() => UpdateStatus(order.Id, "Completed")'>Dokončiť</button>
+                        }
+                        else if (order.Status == "Completed")
+                        {
+                            <span class="text-muted">Dokončená</span>
+                        }
+                        else if (order.Status == "Cancelled")
+                        {
+                            <span class="text-muted">Zrušená</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<OrderDto>? orders;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        var result = await OrderClient.GetOrdersAsync();
+        orders = result?.ToList();
+    }
+
+    private async Task UpdateStatus(int id, string status)
+    {
+        try
+        {
+            await OrderClient.UpdateOrderStatusAsync(id, new UpdateOrderStatusDto(status));
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Chyba: {ex.Message}";
+        }
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Preparing" => "bg-warning text-dark",
+        "Ready" => "bg-info",
+        "Completed" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}

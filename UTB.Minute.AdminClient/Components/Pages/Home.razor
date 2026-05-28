@@ -1,0 +1,71 @@
+﻿@page "/"
+@using UTB.Minute.AdminClient.Services
+@using UTB.Minute.Contracts
+@inject IMealClient MealClient
+@inject NavigationManager Nav
+
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Správa menu</h1>
+    <a href="/add-meal" class="btn btn-success">+ Pridať nové jedlo</a>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Názov</th>
+            <th>Cena</th>
+            <th>Stav</th>
+            <th>Akcia</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (meals != null)
+        {
+            @foreach (var m in meals)
+            {
+                <tr class="@(m.IsActive ? "" : "table-secondary")">
+                    <td>@m.Description</td>
+                    <td>@m.Price.ToString("F2") €</td>
+                    <td>
+                        @if (m.IsActive)
+                        {
+                            <span class="badge bg-success">Aktívne</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Neaktívne</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="/edit-meal/@m.Id" class="btn btn-warning btn-sm">Upraviť</a>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(m.Id)">Zmazať</button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="4">Načítavam...</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<MealDto>? meals;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        var result = await MealClient.GetMealsAsync();
+        meals = result?.ToList();
+    }
+
+    private async Task Delete(int id)
+    {
+        await MealClient.DeleteMealAsync(id);
+        await LoadData();
+    }
+}
