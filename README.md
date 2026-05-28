@@ -1,14 +1,18 @@
-# UTB.Minute – Canteen Management System
+# Menza
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
+![Aspire](https://img.shields.io/badge/.NET_Aspire-13-512BD4?logo=dotnet)
+![xUnit](https://img.shields.io/badge/xUnit-2.9-green)
 
 Objednávací systém pre našu menzu.
 
 ## Popis
 
-Systém je navrhnutý na efektívnu správu a objednávanie jedál na objednávku – minútiek.
+Systém je navrhnutý na efektívnu správu a objednávanie jedál na objednávku - minútiek.
 
-1. **Študent** si vyberie jedlo z aktuálneho menu cez webovú aplikáciu (CanteenClient).
-2. **Kuchyňa** príjme objednávku a mení jej stav v reálnom čase (AdminClient).
-3. **Študent** je informovaný o stave svojej objednávky.
+1. Študent si vyberie jedlo z aktuálneho menu cez webovú aplikáciu (CanteenClient).
+2. Kuchyňa príjme objednávku a mení jej stav v reálnom čase (AdminClient).
+3. Študent je informovaný o stave svojej objednávky.
 
 ## Stack
 
@@ -37,36 +41,24 @@ UTB.Minute/
 └── UTB.Minute.sln
 ```
 
-
-## Funkcionalita
-
-### AdminClient (Správa)
-- ✅ Správa jedál – vytvorenie, úprava, deaktivácia, mazanie
-- ✅ Správa menu – pridávanie, úprava, mazanie položiek menu
-- ✅ Správa objednávok – zmena stavu, zobrazenie všetkých objednávok
-
-### CanteenClient (Študent)
-- ✅ Zobrazenie dnešného menu
-- ✅ Objednanie jedla so znížením počtu dostupných porcií
-- ✅ Zobrazenie histórie objednávok so stavom
-- ✅ Vizualizácia vypredaných jedál (disabled tlačidlo, šedá farba)
-
 ## Dátový model & Stavový stroj
 
 Entity:
-- **Meal** – Jedlá v databáze (názov, cena, aktívne)
-- **MenuItem** – Ponuka v daný deň (dátum, dostupné porcie, odkaz na Meal)
-- **Order** – Objednávky študentov (stav, čas vytvorenia, odkaz na MenuItem)
 
-Životný cyklus objednávky:
-Systém prísne stráži prechody medzi stavmi:
+- **Meal** – jedlá v databáze (názov, cena, aktívne)
+- **MenuItem** – ponuka v daný deň (dátum, dostupné porcie, odkaz na Meal)
+- **Order** – objednávky študentov (stav, čas vytvorenia, odkaz na MenuItem)
+
+Životný cyklus objednávky — systém prísne stráži prechody medzi stavmi (napr. nie je možné zrušiť objednávku, ktorá už bola vydaná):
+
 - Preparing ➔ Ready ➔ Completed
 - Preparing ➔ Cancelled
-- Cancelled ➔ Completed (výnimka – administrátor môže dokončiť aj zrušenú)
+- Cancelled ➔ Completed (administrátor môže dokončiť aj zrušenú)
 
 ## API endpointy
 
 ### Meals
+
 | Metóda | URL | Popis |
 |--------|-----|-------|
 | GET | `/api/meals` | Všetky jedlá |
@@ -76,6 +68,7 @@ Systém prísne stráži prechody medzi stavmi:
 | DELETE | `/api/meals/{id}` | Zmazanie jedla |
 
 ### Menu
+
 | Metóda | URL | Popis |
 |--------|-----|-------|
 | GET | `/api/menu` | Všetky položky menu |
@@ -85,6 +78,7 @@ Systém prísne stráži prechody medzi stavmi:
 | DELETE | `/api/menu/{id}` | Zmazanie položky menu |
 
 ### Orders
+
 | Metóda | URL | Popis |
 |--------|-----|-------|
 | GET | `/api/orders` | Všetky objednávky |
@@ -101,15 +95,25 @@ Systém prísne stráži prechody medzi stavmi:
 - **Aspire Service Discovery** — automatické prepojenie klientov s API cez `http://webapi`.
 - **Aspire.Hosting.Testing** — testy bežia oproti PostgreSQL databáze spustenej cez Aspire.
 
-## Spustenie
+## Requirements and Run
 
-### Požiadavky
 - .NET 10+
 - Docker
 
-### Spustenie aplikácie
 ```bash
-- dotnet run --project UTB.Minute.AppHost
+dotnet run --project UTB.Minute.AppHost
+```
+
+Aspire dashboard zobrazí všetky služby.
+
+## Spustenie testov
+
+```bash
+dotnet test
+```
+
+Testy automaticky spustia PostgreSQL kontajner cez Aspire.
 
 ## Pomer práce v tíme
+
 1:1
