@@ -29,17 +29,17 @@ Systém je navrhnutý na efektívnu správu a objednávanie jedál na objednávk
 
 ```
 .
-├── UTB.Minute.AdminClient/      # Blazor Server – správa pre administrátorov/kuchárov
-├── UTB.Minute.AppHost/          # Aspire orchestrátor
-├── UTB.Minute.CanteenClient/    # Blazor Server – objednávanie pre študentov
-├── UTB.Minute.Contracts/        # Spoločné DTO a kontrakty
-├── UTB.Minute.Db/               # Databázový model (EF Core)
-├── UTB.Minute.DbManager/        # Nástroj na migráciu databázy
-├── UTB.Minute.ServiceDefaults/  # Spoločné nastavenia pre Aspire služby
-├── UTB.Minute.WebApi/           # Backend API
-├── UTB.Minute.WebApi.Tests/     # Integračné testy
-├── Keycloak/                    # Konfigurácia autentifikácie (realm)
-├── assets/                      # Obrázky a screenshoty
+├── UTB.Minute.AdminClient/  
+├── UTB.Minute.AppHost/         
+├── UTB.Minute.CanteenClient/ 
+├── UTB.Minute.Contracts/     
+├── UTB.Minute.Db/               
+├── UTB.Minute.DbManager/       
+├── UTB.Minute.ServiceDefaults/  
+├── UTB.Minute.WebApi/        
+├── UTB.Minute.WebApi.Tests/    
+├── Keycloak/               
+├── assets/
 ├── global.json
 ├── README.md
 └── UTB.Minute.sln
