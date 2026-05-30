@@ -12,7 +12,7 @@ public class SseClientService : IAsyncDisposable
     public SseClientService(IHttpClientFactory httpClientFactory)
     {
         _httpClient = httpClientFactory.CreateClient("SseClient");
-        _httpClient.BaseAddress = new Uri("https://webapi");
+        _httpClient.BaseAddress = new Uri("http://webapi");
     }
 
     public async Task StartAsync()

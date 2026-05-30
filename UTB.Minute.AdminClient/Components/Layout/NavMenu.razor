@@ -21,7 +21,7 @@
             @foreach (var day in GetCalendarDays())
             {
                 var isSelected = Nav.Uri.Contains($"date={day.Date:yyyy-MM-dd}");
-                var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today) || (day.Date.Day == 30 && day.Date.Month == 5 && day.Date.Year == 2026); // Special today for demo
+                var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today);
                 var hasMenu = highlightedDates.Contains(day.Date);
                 var isCurrentMonth = day.Date.Month == viewDate.Month;
 
@@ -57,7 +57,7 @@
 </nav>
 
 @code {
-    private DateTime viewDate = new DateTime(2026, 5, 1);
+    private DateTime viewDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
     private List<DateOnly> highlightedDates = new();
     private CultureInfo skCulture = CultureInfo.GetCultureInfo("sk-SK");
 

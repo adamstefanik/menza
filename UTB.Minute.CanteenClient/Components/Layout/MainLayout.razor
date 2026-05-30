@@ -36,7 +36,7 @@
                     {
                         var dateStr = day.Date.ToString("yyyy-MM-dd");
                         var isWeekend = day.Date.DayOfWeek == DayOfWeek.Saturday || day.Date.DayOfWeek == DayOfWeek.Sunday;
-                        var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today) || (day.Date.Day == 30 && day.Date.Month == 5 && day.Date.Year == 2026);
+                        var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today);
                         var hasMenu = highlightedDates.Contains(day.Date);
                         var isSelected = Nav.Uri.Contains($"date={dateStr}");
                         var isCurrentMonth = day.Date.Month == viewDate.Month;
@@ -58,7 +58,7 @@
 </div>
 
 @code {
-    private DateTime viewDate = new DateTime(2026, 5, 1);
+    private DateTime viewDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
     private List<DateOnly> highlightedDates = new();
     private CultureInfo skCulture = CultureInfo.GetCultureInfo("sk-SK");
 
@@ -66,20 +66,8 @@
     {
         try 
         {
-            // We'll need a way to get all menu item dates. 
-            // For now, let's assume the seeded dates.
-            // In a real app, we'd add GetMenuDatesAsync to IOrderClient.
-            var items = await OrderClient.GetTodayMenuAsync(); 
-            // Since GetTodayMenu only returns today, for this demo we'll manually 
-            // highlight the seeded week 1.6. - 5.6. and 30.5.
-            highlightedDates = new List<DateOnly> {
-                new DateOnly(2026, 5, 30),
-                new DateOnly(2026, 6, 1),
-                new DateOnly(2026, 6, 2),
-                new DateOnly(2026, 6, 3),
-                new DateOnly(2026, 6, 4),
-                new DateOnly(2026, 6, 5)
-            };
+            var items = await OrderClient.GetMenuItemsAsync(); 
+            highlightedDates = items.Select(m => m.Date).Distinct().ToList();
         }
         catch { }
     }

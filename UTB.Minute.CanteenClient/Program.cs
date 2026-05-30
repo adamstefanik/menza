@@ -81,9 +81,12 @@ builder.Services.AddHttpClient("SseClient", client =>
         options.CircuitBreaker.SamplingDuration = TimeSpan.FromHours(12); // Safe range (0.5s - 24h) AND >= 2 * AttemptTimeout
     });
 
+builder.Services.AddHttpClient("SseClient")
+    .AddServiceDiscovery();
+
 builder.Services.AddHttpClient<IOrderClient, OrderClient>(client =>
 {
-    client.BaseAddress = new Uri("https://webapi");
+    client.BaseAddress = new Uri("http://webapi");
 })
 .AddHttpMessageHandler<UTB.Minute.CanteenClient.Services.TokenHandler>()
 .AddServiceDiscovery()

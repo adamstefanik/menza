@@ -3,11 +3,12 @@
 @using UTB.Minute.Contracts
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize(Roles = "admin,cook")]
 @inject IOrderClient OrderClient
 @inject TokenProvider TokenProvider
 @inject SseClientService SseClientService
-@inject PersistentComponentState ApplicationState
+@inject AuthenticationStateProvider AuthStateProvider
 @implements IDisposable
 
 <div class="wk-tabs">
@@ -83,40 +84,12 @@ else
 @code {
     private List<OrderDto>? orders;
     private string? errorMessage;
-    private string? cachedToken;
-    private PersistingComponentStateSubscription _subscription;
-
-    [CascadingParameter]
-    public HttpContext? HttpContext { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _subscription = ApplicationState.RegisterOnPersisting(PersistToken);
-
-        if (ApplicationState.TryTakeFromJson<string>("access_token", out var restoredToken))
-        {
-            cachedToken = restoredToken;
-        }
-
-        if (string.IsNullOrEmpty(cachedToken) && HttpContext is not null)
-        {
-            cachedToken = await HttpContext.GetTokenAsync("access_token");
-        }
-
-        if (!string.IsNullOrEmpty(cachedToken))
-        {
-            TokenProvider.AccessToken = cachedToken;
-        }
-
         SseClientService.OnNotificationReceived += OnNotification;
         await SseClientService.StartAsync();
         await LoadData();
-    }
-
-    private Task PersistToken()
-    {
-        ApplicationState.PersistAsJson("access_token", cachedToken);
-        return Task.CompletedTask;
     }
 
     private void OnNotification()
@@ -130,7 +103,6 @@ else
 
     public void Dispose()
     {
-        _subscription.Dispose();
         SseClientService.OnNotificationReceived -= OnNotification;
     }
 

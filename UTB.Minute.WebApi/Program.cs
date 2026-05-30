@@ -141,14 +141,6 @@ app.MapGet("/api/menu/today", GetTodayMenu);
 app.MapPost("/api/menu", CreateMenuItem);
 app.MapPut("/api/menu/{id:int}", UpdateMenuItem);
 app.MapDelete("/api/menu/{id:int}", DeleteMenuItem);
-app.MapDelete("/api/meals/{id:int}", async (int id, UTB.Minute.Db.CanteenContext db) =>
-{
-    var meal = await db.Meals.FindAsync(id);
-    if (meal is null) return Results.NotFound();
-    db.Meals.Remove(meal);
-    await db.SaveChangesAsync();
-    return Results.NoContent();
-});
 
 // SSE
 app.MapGet("/api/notifications/sse", async (HttpContext ctx, [Microsoft.AspNetCore.Mvc.FromServices] SseNotifier notifier) =>
@@ -180,10 +172,10 @@ app.MapGet("/api/notifications/sse", async (HttpContext ctx, [Microsoft.AspNetCo
 app.MapGet("/api/orders", GetOrders);
 app.MapPost("/api/orders/batch", GetOrdersBatch); // Public for students
 app.MapPost("/api/orders", CreateOrder); // Public for students
-app.MapPut("/api/orders/{id:int}/status", (int id, UpdateOrderStatusDto dto, CanteenContext db, [Microsoft.AspNetCore.Mvc.FromServices] UTB.Minute.WebApi.Services.SseNotifier notifier, HttpContext httpContext) => 
+app.MapPut("/api/orders/{id:int}/status", (int id, UpdateOrderStatusDto dto, CanteenContext db, [Microsoft.AspNetCore.Mvc.FromServices] UTB.Minute.WebApi.Services.SseNotifier notifier, ILogger<Program> logger) => 
 {
     return UpdateOrderStatus(id, dto, db, notifier);
-}); // Auth bypass for local dev unblocking on macOS
+});
 
 app.UseHttpsRedirection();
 app.Run();
@@ -367,7 +359,7 @@ static async Task<Ok<List<OrderDto>>> GetOrdersBatch([Microsoft.AspNetCore.Mvc.F
     return TypedResults.Ok(orders);
 }
 
-static async Task<Results<Created<OrderDto>, NotFound, BadRequest<string>>> CreateOrder(CreateOrderDto dto, CanteenContext db, [Microsoft.AspNetCore.Mvc.FromServices] UTB.Minute.WebApi.Services.SseNotifier notifier)
+static async Task<Results<Created<OrderDto>, NotFound, BadRequest<string>>> CreateOrder(CreateOrderDto dto, CanteenContext db, [Microsoft.AspNetCore.Mvc.FromServices] UTB.Minute.WebApi.Services.SseNotifier notifier, ILogger<Program> logger)
 {
     var menuItem = await db.MenuItems.Include(mi => mi.Meal).FirstOrDefaultAsync(mi => mi.Id == dto.MenuItemId);
 
@@ -396,6 +388,8 @@ static async Task<Results<Created<OrderDto>, NotFound, BadRequest<string>>> Crea
     }
 
     await notifier.NotifyAsync("OrderCreated");
+    
+    logger.LogInformation("Order created: {OrderId} for MenuItem {MenuItemId}", order.Id, order.MenuItemId);
 
     return TypedResults.Created($"/api/orders/{order.Id}",
         new OrderDto(order.Id, order.Status.ToString(), order.CreatedAt, order.MenuItemId, menuItem.Meal.Description, menuItem.Meal.Allergens));

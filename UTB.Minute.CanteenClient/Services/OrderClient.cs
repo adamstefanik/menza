@@ -5,6 +5,19 @@ namespace UTB.Minute.CanteenClient.Services;
 
 public class OrderClient(HttpClient httpClient) : IOrderClient
 {
+    public async Task<IEnumerable<MenuItemDto>> GetMenuItemsAsync()
+    {
+        try
+        {
+            return await httpClient.GetFromJsonAsync<IEnumerable<MenuItemDto>>("api/menu") ?? [];
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return [];
+        }
+    }
+
     public async Task<IEnumerable<MenuItemDto>> GetTodayMenuAsync()
     {
         try

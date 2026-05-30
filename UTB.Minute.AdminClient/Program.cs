@@ -141,6 +141,9 @@ builder.Services.AddHttpClient("SseClient", client =>
         options.CircuitBreaker.SamplingDuration = TimeSpan.FromHours(12); 
     });
 
+builder.Services.AddHttpClient("SseClient")
+    .AddServiceDiscovery();
+
 builder.Services.AddHttpClient<IMealClient, MealClient>(client =>
 {
     client.BaseAddress = new Uri("http://webapi");

@@ -4,6 +4,7 @@ namespace UTB.Minute.CanteenClient.Services;
 
 public interface IOrderClient
 {
+    Task<IEnumerable<MenuItemDto>> GetMenuItemsAsync();
     Task<IEnumerable<MenuItemDto>> GetTodayMenuAsync();
     Task<IEnumerable<MenuItemDto>> GetMenuByDateAsync(DateOnly date);
     Task<OrderDto> CreateOrderAsync(CreateOrderDto dto);

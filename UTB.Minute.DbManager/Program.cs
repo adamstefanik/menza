@@ -77,21 +77,33 @@ app.MapPost("/reset-db", async (CanteenContext context) =>
     // MENU ITEMS
     var today = DateOnly.FromDateTime(DateTime.Today);
     var tomorrow = today.AddDays(1);
-    var monday = new DateOnly(2026, 6, 1);
-    var tuesday = new DateOnly(2026, 6, 2);
-    var wednesday = new DateOnly(2026, 6, 3);
-    var thursday = new DateOnly(2026, 6, 4);
-    var friday = new DateOnly(2026, 6, 5);
+
+    int daysUntilMonday = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7);
+    if (daysUntilMonday > 7) daysUntilMonday -= 7;
+    if (today.DayOfWeek == DayOfWeek.Sunday) daysUntilMonday = 1;
+    if (today.DayOfWeek == DayOfWeek.Saturday) daysUntilMonday = 2;
+    // Simplified: always find the next Monday if today is Monday or later, 
+    // but if it's weekend, just find the upcoming Monday.
+    
+    // Actually, let's just use a simple logic:
+    int diff = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
+    if (diff == 0) diff = 7; // Next Monday if today is Monday
+    
+    var monday = today.AddDays(diff);
+    var tuesday = monday.AddDays(1);
+    var wednesday = monday.AddDays(2);
+    var thursday = monday.AddDays(3);
+    var friday = monday.AddDays(4);
 
     var menu = new List<MenuItem>
     {
-        // Today (Saturday 30.5.)
+        // Today
         new MenuItem { Date = today, MealId = m1.Id, AvailablePortions = 20 },
         new MenuItem { Date = today, MealId = m2.Id, AvailablePortions = 20 },
         new MenuItem { Date = today, MealId = m3.Id, AvailablePortions = 20 },
         new MenuItem { Date = today, MealId = m4.Id, AvailablePortions = 20 },
         new MenuItem { Date = today, MealId = m5.Id, AvailablePortions = 20 },
-        // Tomorrow (Sunday 31.5.)
+        // Tomorrow
         new MenuItem { Date = tomorrow, MealId = m6.Id, AvailablePortions = 20 },
         new MenuItem { Date = tomorrow, MealId = m7.Id, AvailablePortions = 20 },
         new MenuItem { Date = tomorrow, MealId = m8.Id, AvailablePortions = 20 },
