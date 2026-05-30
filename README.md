@@ -19,6 +19,7 @@ Systém je navrhnutý na efektívnu správu a objednávanie jedál na objednávk
 
 - Runtime: .NET 10
 - Orchestrácia: .NET Aspire
+- Autentifikácia: Keycloak
 - API: Minimal Web API s využitím TypedResults
 - Frontend: Blazor Server (AdminClient + CanteenClient)
 - Databáza: Entity Framework Core + PostgreSQL
@@ -27,20 +28,39 @@ Systém je navrhnutý na efektívnu správu a objednávanie jedál na objednávk
 ## Štruktúra
 
 ```
-UTB.Minute/
+.
 ├── UTB.Minute.AdminClient/      # Blazor Server – správa pre administrátorov/kuchárov
+├── UTB.Minute.AppHost/          # Aspire orchestrátor
 ├── UTB.Minute.CanteenClient/    # Blazor Server – objednávanie pre študentov
-├── UTB.Minute.WebApi.Tests/
-├── UTB.Minute.WebApi/
-├── UTB.Minute.DbManager/
-├── UTB.Minute.AppHost/
-├── UTB.Minute.ServiceDefaults/
-├── UTB.Minute.Db/
-├── UTB.Minute.Contracts/
-├── README.md
+├── UTB.Minute.Contracts/        # Spoločné DTO a kontrakty
+├── UTB.Minute.Db/               # Databázový model (EF Core)
+├── UTB.Minute.DbManager/        # Nástroj na migráciu databázy
+├── UTB.Minute.ServiceDefaults/  # Spoločné nastavenia pre Aspire služby
+├── UTB.Minute.WebApi/           # Backend API
+├── UTB.Minute.WebApi.Tests/     # Integračné testy
+├── Keycloak/                    # Konfigurácia autentifikácie (realm)
+├── assets/                      # Obrázky a screenshoty
 ├── global.json
+├── README.md
 └── UTB.Minute.sln
 ```
+
+## Autentifikácia (Keycloak)
+
+Systém využíva Keycloak na správu používateľov a rolí. Pri spustení cez Aspire sa automaticky importuje realm s nasledovnými testovacími účtami:
+
+| Používateľ | Heslo | Roly | Popis |
+|------------|-------|------|-------|
+| `admin` | `admin` | `admin`, `cook` | Plný prístup k správe jedál a objednávok |
+| `cook` | `cook` | `cook` | Prístup k správe objednávok (AdminClient) |
+
+Študenti (CanteenClient) momentálne pristupujú k aplikácii bez prihlásenia (anonymne), ale systém je pripravený na rozšírenie.
+
+## Real-time Notifikácie
+
+Pre okamžitú aktualizáciu stavu objednávok v prehliadači bez nutnosti manuálneho obnovovania stránky využíva systém **Server-Sent Events (SSE)**:
+- **Backend (WebApi)**: Pushuje udalosti cez stream `OrderCreated` a `OrderUpdated`.
+- **Frontend (Blazor)**: `SseClientService` udržiava spojenie a cez udalosti (Events) notifikuje UI komponenty, ktoré následne prečítajú čerstvé dáta z API.
 
 ## Dátový model & Stavový stroj
 
@@ -66,13 +86,13 @@ Entity:
 | GET | `/api/meals/{id}` | Jedlo podľa Id |
 | POST | `/api/meals` | Vytvorenie jedla |
 | PUT | `/api/meals/{id}` | Úprava jedla |
-| DELETE | `/api/meals/{id}` | Zmazanie jedla |
+| PATCH | `/api/meals/{id}/deactivate` | Deaktivácia jedla |
 
 ### Menu
 
 | Metóda | URL | Popis |
 |--------|-----|-------|
-| GET | `/api/menu` | Všetky položky menu |
+| GET | `/api/menu` | Všetky položky menu (možný filter ?date=...) |
 | GET | `/api/menu/today` | Dnešné menu |
 | POST | `/api/menu` | Vytvorenie položky menu |
 | PUT | `/api/menu/{id}` | Úprava položky menu |
@@ -82,9 +102,16 @@ Entity:
 
 | Metóda | URL | Popis |
 |--------|-----|-------|
-| GET | `/api/orders` | Všetky objednávky |
+| GET | `/api/orders` | Aktívne objednávky (Preparing, Ready) |
 | POST | `/api/orders` | Vytvorenie objednávky |
+| POST | `/api/orders/batch` | Získanie detailov pre zoznam Id |
 | PUT | `/api/orders/{id}/status` | Zmena stavu objednávky |
+
+### Notifikácie
+
+| Metóda | URL | Popis |
+|--------|-----|-------|
+| GET | `/api/notifications/sse` | Server-Sent Events stream pre real-time updaty |
 
 ## Architektúra
 
@@ -117,4 +144,4 @@ Testy automaticky spustia PostgreSQL kontajner cez Aspire.
 
 ## Pomer práce v tíme
 
-1:1
+1:2
