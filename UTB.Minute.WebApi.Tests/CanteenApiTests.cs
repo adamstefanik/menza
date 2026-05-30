@@ -34,8 +34,8 @@ public class TestFixture : IAsyncLifetime
         await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();
 
-        var meal1 = new Meal { Description = "Chicken schnitzel", Price = 120 };
-        var meal2 = new Meal { Description = "Beef goulash", Price = 135 };
+        var meal1 = new Meal { Description = "Chicken schnitzel", Price = 120, IsActive = true };
+        var meal2 = new Meal { Description = "Beef goulash", Price = 135, IsActive = true };
 
         context.Meals.AddRange(meal1, meal2);
         await context.SaveChangesAsync();
@@ -81,7 +81,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var response = await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto("Schnitzel", 120m));
+            new CreateMealDto("Schnitzel", "1", 120m));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -121,12 +121,12 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var created = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 100m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 100m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var response = await fixture.HttpClient.PutAsJsonAsync(
             $"/api/meals/{created!.Id}",
-            new UpdateMealDto(created.Description, 150m, false));
+            new UpdateMealDto(created.Description, "1, 3", 150m, false));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -150,7 +150,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var created = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 100m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 100m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var response = await fixture.HttpClient.PatchAsync($"/api/meals/{created!.Id}/deactivate", null);
@@ -180,7 +180,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var meal = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 99m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 99m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var response = await fixture.HttpClient.PostAsJsonAsync(
@@ -222,7 +222,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var meal = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 99m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 99m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var item = await (await fixture.HttpClient.PostAsJsonAsync(
@@ -254,7 +254,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var meal = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 99m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 99m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var item = await (await fixture.HttpClient.PostAsJsonAsync(
@@ -280,7 +280,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var meal = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 99m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 99m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var item = await (await fixture.HttpClient.PostAsJsonAsync(
@@ -313,7 +313,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var meal = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 99m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 99m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var item = await (await fixture.HttpClient.PostAsJsonAsync(
@@ -390,7 +390,7 @@ public class CanteenApiTests(TestFixture fixture)
     {
         var meal = await (await fixture.HttpClient.PostAsJsonAsync(
             "/api/meals",
-            new CreateMealDto($"Meal {Guid.NewGuid()}", 99m)))
+            new CreateMealDto($"Meal {Guid.NewGuid()}", null, 99m)))
             .Content.ReadFromJsonAsync<MealDto>();
 
         var item = await (await fixture.HttpClient.PostAsJsonAsync(
