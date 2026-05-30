@@ -1,23 +1,42 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<PageTitle>UTB minute - Administrácia</PageTitle>
+
+<div class="wk-header">
+    <div class="d-flex align-items-center">
+        <div class="wk-brand">UTB minute</div>
+        <nav class="wk-nav-top">
+            <a href="/" class="wk-nav-link">Administrácia</a>
+        </nav>
     </div>
+    <div class="wk-user-box">
+        <AuthorizeView>
+            <Authorized>
+                <span class="text-white small">Užívateľ: <strong>@context.User.Identity?.Name</strong></span>
+                <a href="/logout" class="btn btn-sm btn-outline-light py-0" data-enhance-nav="false">Odhlásiť</a>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/login" class="btn btn-sm btn-outline-light py-0" data-enhance-nav="false">Prihlásiť</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<div class="wk-layout">
+    <aside class="wk-sidebar">
+        <NavMenu />
+    </aside>
 
-        <article class="content px-4">
+    <main class="wk-main">
+        <div class="content-card shadow-sm border rounded bg-white p-4">
             @Body
-        </article>
+        </div>
     </main>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
+    Vyskytla sa chyba.
+    <a href="." class="reload">Obnoviť</a>
     <span class="dismiss">🗙</span>
 </div>

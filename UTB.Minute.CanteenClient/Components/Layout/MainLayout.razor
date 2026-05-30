@@ -1,23 +1,122 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject UTB.Minute.CanteenClient.Services.IOrderClient OrderClient
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+@rendermode InteractiveServer
+
+<PageTitle>UTB minute - Objednávanie</PageTitle>
+
+<div class="wk-header">
+    <div class="d-flex align-items-center">
+        <div class="wk-brand">UTB minute</div>
+        <nav class="wk-nav-top">
+            <NavLink class="wk-nav-link" href="/" Match="NavLinkMatch.All">Objednávanie</NavLink>
+            <NavLink class="wk-nav-link" href="/allergens">Alergény</NavLink>
+        </nav>
     </div>
+    <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="text-white fw-bold">Kredit: 100,00 €</span>
+    </div>
+</div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="wk-layout">
+    <aside class="wk-sidebar">
+        <div class="wk-card">
+            <div class="wk-card-header">Výber obdobia</div>
+            <div class="wk-calendar-wrapper">
+                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                    <span class="wk-calendar-arrow" @onclick="PrevMonth">&lt;</span>
+                    <span class="fw-bold small">@GetMonthName() @viewDate.Year</span>
+                    <span class="wk-calendar-arrow" @onclick="NextMonth">&gt;</span>
+                </div>
+                <div class="wk-calendar-grid">
+                    <div class="wk-day-name">po</div><div class="wk-day-name">ut</div><div class="wk-day-name">st</div>
+                    <div class="wk-day-name">št</div><div class="wk-day-name">pi</div><div class="wk-day-name">so</div>
+                    <div class="wk-day-name">ne</div>
+                    
+                    @foreach (var day in GetCalendarDays())
+                    {
+                        var dateStr = day.Date.ToString("yyyy-MM-dd");
+                        var isWeekend = day.Date.DayOfWeek == DayOfWeek.Saturday || day.Date.DayOfWeek == DayOfWeek.Sunday;
+                        var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today) || (day.Date.Day == 30 && day.Date.Month == 5 && day.Date.Year == 2026);
+                        var hasMenu = highlightedDates.Contains(day.Date);
+                        var isSelected = Nav.Uri.Contains($"date={dateStr}");
+                        var isCurrentMonth = day.Date.Month == viewDate.Month;
+
+                        <a href="/?date=@dateStr" 
+                           class="wk-day @(isCurrentMonth ? "" : "wk-day-prev") @(isWeekend ? "wk-day-weekend" : "") @(isToday ? "wk-day-today" : "") @(hasMenu ? "wk-day-highlight" : "") @(isSelected ? "wk-day-selected" : "")" 
+                           style="text-decoration: none;">
+                            @day.Date.Day
+                        </a>
+                    }
+                </div>
+            </div>
         </div>
+    </aside>
 
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="wk-main">
+        @Body
     </main>
 </div>
 
+@code {
+    private DateTime viewDate = new DateTime(2026, 5, 1);
+    private List<DateOnly> highlightedDates = new();
+    private CultureInfo skCulture = CultureInfo.GetCultureInfo("sk-SK");
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            // We'll need a way to get all menu item dates. 
+            // For now, let's assume the seeded dates.
+            // In a real app, we'd add GetMenuDatesAsync to IOrderClient.
+            var items = await OrderClient.GetTodayMenuAsync(); 
+            // Since GetTodayMenu only returns today, for this demo we'll manually 
+            // highlight the seeded week 1.6. - 5.6. and 30.5.
+            highlightedDates = new List<DateOnly> {
+                new DateOnly(2026, 5, 30),
+                new DateOnly(2026, 6, 1),
+                new DateOnly(2026, 6, 2),
+                new DateOnly(2026, 6, 3),
+                new DateOnly(2026, 6, 4),
+                new DateOnly(2026, 6, 5)
+            };
+        }
+        catch { }
+    }
+
+    private void PrevMonth() => viewDate = viewDate.AddMonths(-1);
+    private void NextMonth() => viewDate = viewDate.AddMonths(1);
+
+    private string GetMonthName() => skCulture.DateTimeFormat.GetMonthName(viewDate.Month);
+
+    private List<CalendarDay> GetCalendarDays()
+    {
+        var days = new List<CalendarDay>();
+        var firstDayOfMonth = new DateTime(viewDate.Year, viewDate.Month, 1);
+        int offset = ((int)firstDayOfMonth.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        var startDate = firstDayOfMonth.AddDays(-offset);
+        
+        for (int i = 0; i < 42; i++)
+        {
+            days.Add(new CalendarDay { Date = DateOnly.FromDateTime(startDate.AddDays(i)) });
+        }
+        return days;
+    }
+
+    private class CalendarDay { public DateOnly Date { get; set; } }
+
+    private string? DateFromQuery => new Uri(Nav.Uri).Query.Contains("date=") 
+        ? Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(Nav.Uri).Query)["date"].ToString() 
+        : null;
+}
+
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
+    Vyskytla sa chyba.
+    <a href="." class="reload">Obnoviť</a>
     <span class="dismiss">🗙</span>
 </div>

@@ -1,6 +1,8 @@
 @page "/add-meal"
 @using UTB.Minute.AdminClient.Services
 @using UTB.Minute.Contracts
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin")]
 @inject IMealClient MealClient
 @inject NavigationManager Nav
 
@@ -27,6 +29,11 @@
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label fw-bold">Alergény:</label>
+                    <InputText class="form-control" @bind-Value="formModel.Allergens" placeholder="napr. 1, 3, 7" />
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label fw-bold">Cena (€):</label>
                     <InputNumber class="form-control" @bind-Value="formModel.Price" />
                 </div>
@@ -50,7 +57,7 @@
         
         try 
         {
-            var newMeal = new MealDto(0, formModel.Description, formModel.Price, true);
+            var newMeal = new MealDto(0, formModel.Description, formModel.Allergens, formModel.Price, true);
             await MealClient.CreateMealAsync(newMeal);
             Nav.NavigateTo("/");
         }
@@ -64,6 +71,7 @@
     private class FormModel 
     {
         public string Description { get; set; } = "";
+        public string? Allergens { get; set; }
         public decimal Price { get; set; } = 0;
     }
 }

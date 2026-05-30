@@ -1,6 +1,6 @@
 using UTB.Minute.Contracts;
 
-namespace UTB.Minute.AdminClient.Services;
+namespace UTB.Minute.CanteenClient.Services;
 
 public interface IMealClient
 {

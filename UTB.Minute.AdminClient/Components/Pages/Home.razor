@@ -1,61 +1,114 @@
-﻿@page "/"
+@page "/"
 @using UTB.Minute.AdminClient.Services
 @using UTB.Minute.Contracts
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IMealClient MealClient
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
 @rendermode InteractiveServer
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Správa menu</h1>
-    <a href="/add-meal" class="btn btn-success">+ Pridať nové jedlo</a>
-</div>
+<AuthorizeView>
+    <Authorized>
+        <div class="wk-tabs">
+            <div class="wk-tab active">Správa jedál</div>
+            <div class="ms-auto">
+                <a href="/add-meal" class="btn btn-success btn-sm">+ Pridať nové jedlo</a>
+            </div>
+        </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Názov</th>
-            <th>Cena</th>
-            <th>Stav</th>
-            <th>Akcia</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (meals != null)
-        {
-            @foreach (var m in meals)
-            {
-                <tr class="@(m.IsActive ? "" : "table-secondary")">
-                    <td>@m.Description</td>
-                    <td>@m.Price.ToString("F2") €</td>
-                    <td>
-                        @if (m.IsActive)
-                        {
-                            <span class="badge bg-success">Aktívne</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">Neaktívne</span>
-                        }
-                    </td>
-                    <td>
-                        <a href="/edit-meal/@m.Id" class="btn btn-warning btn-sm">Upraviť</a>
-                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(m.Id)">Zmazať</button>
-                    </td>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Názov</th>
+                    <th class="text-end">Cena</th>
+                    <th class="text-center">Stav</th>
+                    <th class="text-end">Akcia</th>
                 </tr>
-            }
-        }
-        else
-        {
-            <tr><td colspan="4">Načítavam...</td></tr>
-        }
-    </tbody>
-</table>
+            </thead>
+            <tbody>
+                @if (meals != null)
+                {
+                    @foreach (var m in meals)
+                    {
+                        <tr class="@(m.IsActive ? "" : "table-secondary")">
+                            <td>
+                                <div>@m.Description</div>
+                                @if (!string.IsNullOrEmpty(m.Allergens))
+                                {
+                                    <div class="small text-muted">Alergény: @m.Allergens</div>
+                                }
+                            </td>
+                            <td class="text-end">@m.Price.ToString("F2") €</td>
+                            <td class="text-center">
+                                @if (m.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktívne</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Neaktívne</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a href="/edit-meal/@m.Id" class="btn btn-secondary btn-sm">Upraviť</a>
+                                @if (m.IsActive)
+                                {
+                                    <button class="btn btn-danger btn-sm" @onclick="() => Deactivate(m.Id)">Deaktivovať</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4">Načítavam...</td></tr>
+                }
+            </tbody>
+        </table>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container mt-5 text-center">
+            <div class="card shadow-sm p-5">
+                <h3>Vitajte v systéme UTB minute</h3>
+                <p class="text-muted">pre pokračovanie sa prosím prihláste</p>
+                <div class="mt-4">
+                    <a href="/login" class="btn btn-primary btn-lg" data-enhance-nav="false">Prihlásiť sa</a>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private List<MealDto>? meals;
+    private bool _shouldRedirect;
 
-    protected override async Task OnInitializedAsync() => await LoadData();
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            if (user.IsInRole("cook") && !user.IsInRole("admin"))
+            {
+                _shouldRedirect = true;
+                return;
+            }
+
+            await LoadData();
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && _shouldRedirect)
+        {
+            Nav.NavigateTo("/orders", forceLoad: true);
+        }
+    }
 
     private async Task LoadData()
     {
@@ -63,9 +116,9 @@
         meals = result?.ToList();
     }
 
-    private async Task Delete(int id)
+    private async Task Deactivate(int id)
     {
-        await MealClient.DeleteMealAsync(id);
+        await MealClient.DeactivateMealAsync(id);
         await LoadData();
     }
 }

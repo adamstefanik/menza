@@ -1,12 +1,19 @@
 @page "/orders"
 @using UTB.Minute.AdminClient.Services
 @using UTB.Minute.Contracts
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin,cook")]
 @inject IOrderClient OrderClient
+@inject TokenProvider TokenProvider
+@inject SseClientService SseClientService
+@inject PersistentComponentState ApplicationState
+@implements IDisposable
 
 @rendermode InteractiveServer
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Správa objednávok</h1>
+<div class="wk-tabs">
+    <div class="wk-tab active">Správa objednávok</div>
 </div>
 
 @if (!string.IsNullOrEmpty(errorMessage))
@@ -39,15 +46,21 @@ else
             {
                 <tr>
                     <td>@order.Id</td>
-                    <td>@order.MealDescription</td>
                     <td>
-                        <span class="badge @GetStatusClass(order.Status)">@order.Status</span>
+                        <div>@order.MealDescription</div>
+                        @if (!string.IsNullOrEmpty(order.Allergens))
+                        {
+                            <div class="small text-muted">Alergény: @order.Allergens</div>
+                        }
                     </td>
-                    <td>@order.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        <span class="badge @GetStatusClass(order.Status)">@GetStatusLabel(order.Status)</span>
+                    </td>
+                    <td>@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                     <td>
                         @if (order.Status == "Preparing")
                         {
-                            <button class="btn btn-info btn-sm" @onclick='() => UpdateStatus(order.Id, "Ready")'>Pripravené</button>
+                            <button class="btn btn-success btn-sm" @onclick='() => UpdateStatus(order.Id, "Ready")'>Pripravené</button>
                             <button class="btn btn-danger btn-sm" @onclick='() => UpdateStatus(order.Id, "Cancelled")'>Zrušiť</button>
                         }
                         else if (order.Status == "Ready")
@@ -72,8 +85,56 @@ else
 @code {
     private List<OrderDto>? orders;
     private string? errorMessage;
+    private string? cachedToken;
+    private PersistingComponentStateSubscription _subscription;
 
-    protected override async Task OnInitializedAsync() => await LoadData();
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _subscription = ApplicationState.RegisterOnPersisting(PersistToken);
+
+        if (ApplicationState.TryTakeFromJson<string>("access_token", out var restoredToken))
+        {
+            cachedToken = restoredToken;
+        }
+
+        if (string.IsNullOrEmpty(cachedToken) && HttpContext is not null)
+        {
+            cachedToken = await HttpContext.GetTokenAsync("access_token");
+        }
+
+        if (!string.IsNullOrEmpty(cachedToken))
+        {
+            TokenProvider.AccessToken = cachedToken;
+        }
+
+        SseClientService.OnNotificationReceived += OnNotification;
+        await SseClientService.StartAsync();
+        await LoadData();
+    }
+
+    private Task PersistToken()
+    {
+        ApplicationState.PersistAsJson("access_token", cachedToken);
+        return Task.CompletedTask;
+    }
+
+    private void OnNotification()
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadData();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        _subscription.Dispose();
+        SseClientService.OnNotificationReceived -= OnNotification;
+    }
 
     private async Task LoadData()
     {
@@ -96,10 +157,19 @@ else
 
     private string GetStatusClass(string status) => status switch
     {
-        "Preparing" => "bg-warning text-dark",
-        "Ready" => "bg-info",
-        "Completed" => "bg-success",
-        "Cancelled" => "bg-danger",
-        _ => "bg-secondary"
+        "Preparing" => "bg-secondary text-white",
+        "Ready" => "bg-success text-white",
+        "Completed" => "bg-success text-white",
+        "Cancelled" => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+
+    private string GetStatusLabel(string status) => status switch
+    {
+        "Preparing" => "Pripravuje sa",
+        "Ready" => "Hotové",
+        "Completed" => "Dokončené",
+        "Cancelled" => "Zrušené",
+        _ => status
     };
 }

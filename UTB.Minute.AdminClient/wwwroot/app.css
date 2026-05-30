@@ -1,60 +1,198 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+:root {
+    --wk-bg: #f3f4f6;
+    --wk-sidebar-bg: #ffffff;
+    --wk-header-bg: #333333;
+    --wk-accent-blue: #1e40af;
+    --wk-border: #d1d5db;
+    --wk-text: #374151;
+    --wk-text-muted: #6b7280;
+    --wk-weekend: #dc2626;
+    --wk-highlight-yellow: #fef3c7;
+    --wk-highlight-blue: #e0f2fe;
 }
 
-a, .btn-link {
-    color: #006bb7;
+body {
+    background-color: var(--wk-bg);
+    color: var(--wk-text);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+/* Header */
+.wk-header {
+    background-color: var(--wk-header-bg);
+    color: #ffffff;
+    padding: 0.5rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 45px;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.wk-brand {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-right: 2rem;
 }
 
-.content {
-    padding-top: 1.1rem;
+.wk-nav-top {
+    display: flex;
+    gap: 1.5rem;
 }
 
-h1:focus {
-    outline: none;
+.wk-nav-link {
+    color: #d1d5db;
+    text-decoration: none;
+    font-size: 0.9rem;
 }
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
-}
-
-.invalid {
-    outline: 1px solid #e50000;
-}
-
-.validation-message {
-    color: #e50000;
-}
-
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
+.wk-nav-link:hover {
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
-
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
+.wk-user-box {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.9rem;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
+/* Layout */
+.wk-layout {
+    display: flex;
+    min-height: calc(100vh - 45px);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
+.wk-sidebar {
+    width: 280px;
+    background-color: var(--wk-sidebar-bg);
+    border-right: 1px solid var(--wk-border);
+    padding: 0;
+}
+
+.wk-main {
+    flex: 1;
+    padding: 20px;
+}
+
+/* Sidebar Components */
+.wk-card {
+    border: 1px solid var(--wk-border);
+    margin: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.wk-card-header {
+    background-color: #f9fafb;
+    padding: 8px;
+    text-align: center;
+    border-bottom: 1px solid var(--wk-border);
+    font-weight: 500;
+}
+
+.wk-calendar-wrapper {
+    padding: 10px;
+}
+
+.wk-calendar-arrow {
+    cursor: pointer;
+    font-weight: bold;
+    color: #6b7280;
+    padding: 0 8px;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.wk-calendar-arrow:hover {
+    color: var(--wk-accent-blue);
+}
+
+.wk-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.wk-day-name {
+    color: #2563eb;
+    font-weight: 500;
+    padding-bottom: 8px;
+}
+
+.wk-day { padding: 5px 0; }
+.wk-day-prev { color: #9ca3af; }
+.wk-day-weekend { color: var(--wk-weekend); }
+.wk-day-today { background-color: var(--wk-highlight-yellow); color: var(--wk-weekend); font-weight: 700; }
+.wk-day-highlight { background-color: var(--wk-highlight-blue); }
+.wk-day-selected { background-color: #1e3a8a !important; color: white !important; font-weight: bold; }
+
+/* Sidebar Navigation Items */
+.wk-nav-item {
+    padding: 8px 15px;
+    display: block;
+    text-decoration: none;
+    color: var(--wk-text);
+    border-radius: 4px;
+    margin: 2px 10px;
+}
+
+.wk-nav-item:hover {
+    background-color: #f1f5f9;
+}
+
+.wk-nav-item.active {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
+}
+
+/* Content Tabs */
+.wk-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--wk-border);
+    margin-bottom: 20px;
+}
+
+.wk-tab {
+    padding: 8px 25px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-weight: 500;
+    color: var(--wk-text);
+}
+
+.wk-tab.active, .wk-tab.static {
+    background-color: white;
+    border-color: var(--wk-border);
+    position: relative;
+    top: 1px;
+}
+
+/* Table Styles - WebKredit inspired */
+.table {
+    background: white;
+    border: 1px solid var(--wk-border);
+    font-size: 0.9rem;
+}
+
+.table thead th {
+    background-color: #f3f4f6;
+    border-bottom: 2px solid var(--wk-border);
+    color: var(--wk-text);
+    padding: 10px 15px;
+}
+
+.table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 4px;
 }

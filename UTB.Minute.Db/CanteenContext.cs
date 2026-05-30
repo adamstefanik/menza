@@ -17,6 +17,7 @@ public class CanteenContext : DbContext
         
         // Povieme EF, že Meal patrí do tabuľky Meals
         modelBuilder.Entity<Meal>().ToTable("Meals");
+        
         // Povieme EF, že MenuItem patrí do tabuľky MenuItems
         modelBuilder.Entity<MenuItem>().ToTable("MenuItems");
     }

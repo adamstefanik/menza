@@ -2,143 +2,226 @@
 @using UTB.Minute.CanteenClient.Services
 @using UTB.Minute.Contracts
 @inject IOrderClient OrderClient
+@inject SseClientService SseClientService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@implements IDisposable
 
 @rendermode InteractiveServer
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Dnešné menu</h1>
-    <span class="text-muted">@DateTime.Today.ToString("dd.MM.yyyy")</span>
+<PageTitle>UTB minute - @DisplayDate</PageTitle>
+
+<div class="wk-tabs">
+    <div class="wk-tab static">Objednávanie</div>
 </div>
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-
-@if (successMessage != null)
-{
-    <div class="alert alert-success">@successMessage</div>
-}
+<div class="wk-meal-header wk-meal-grid-layout">
+    <div></div>
+    <div>Názov jedla</div>
+    <div class="text-end">Zostáva</div>
+    <div class="text-end">Cena</div>
+    <div></div>
+</div>
 
 @if (menuItems == null)
 {
-    <p>Načítavam...</p>
+    <div class="text-center p-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2">Načítavam...</p>
+    </div>
 }
 else if (!menuItems.Any())
 {
-    <div class="alert alert-info">Dnes nie je k dispozícii žiadne menu.</div>
+    <div class="alert alert-info text-center mt-3">Pre vybraný deň (@DisplayDate) nie sú v ponuke žiadne jedlá.</div>
 }
 else
 {
-    <div class="row">
-        @foreach (var item in menuItems)
-        {
-            <div class="col-md-4 mb-3">
-                <div class="card @(item.AvailablePortions <= 0 ? "border-secondary bg-light opacity-50" : "")">
-                    <div class="card-body">
-                        <h5 class="card-title @(item.AvailablePortions <= 0 ? "text-decoration-line-through text-muted" : "")">
-                            @item.MealDescription
-                        </h5>
-                        <p class="card-text">
-                            @if (item.AvailablePortions <= 0)
-                            {
-                                <span class="badge bg-danger">VYPREDANÉ</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-primary">@item.AvailablePortions porcií</span>
-                            }
-                        </p>
-                        <button class="btn @(item.AvailablePortions <= 0 ? "btn-secondary" : "btn-success")" 
-                                @onclick="() => Order(item.Id)" 
-                                disabled="@(item.AvailablePortions <= 0)">
-                            @(item.AvailablePortions <= 0 ? "Vypredané" : "Objednať")
-                        </button>
-                    </div>
-                </div>
+    <div class="wk-meal-group">Obed - @GetDayOfWeekName(targetDate) @DisplayDate</div>
+    
+    @foreach (var (item, index) in menuItems.Select((v, i) => (v, i + 1)))
+    {
+        var isSoldOut = item.AvailablePortions <= 0;
+        <div class="wk-meal-row wk-meal-grid-layout @(isSoldOut ? "opacity-50" : "")">
+            <div class="d-flex justify-content-center">
+                <div class="wk-number-circle">@index</div>
             </div>
-        }
+            <div>
+                <div class="wk-meal-desc">@item.MealDescription</div>
+                @if (!string.IsNullOrEmpty(item.Allergens))
+                {
+                    <div class="wk-meal-allergens">Alergény: @item.Allergens</div>
+                }
+            </div>
+            <div class="wk-meal-val fw-bold text-end">@(isSoldOut ? "0" : item.AvailablePortions.ToString()) ks</div>
+            <div class="wk-meal-val text-end">@item.Price.ToString("F2") €</div>
+            <div class="text-end">
+                <button class="btn-wk ms-auto" disabled="@isSoldOut" @onclick="() => OrderMeal(item.Id)">
+                    Objednať
+                </button>
+            </div>
+        </div>
+    }
+}
+
+@if (myOrders != null && myOrders.Any())
+{
+    <div class="mt-5 border-top pt-4">
+        <h4 class="mb-3">Moje objednávky</h4>
+        <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-3">Číslo</th>
+                        <th>Jedlo</th>
+                        <th>Stav</th>
+                        <th class="text-end pe-3">Čas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in myOrders.OrderByDescending(o => o.CreatedAt))
+                    {
+                        <tr>
+                            <td class="ps-3"><strong>@order.Id</strong></td>
+                            <td>
+                                <div>@order.MealDescription</div>
+                                @if (!string.IsNullOrEmpty(order.Allergens))
+                                {
+                                    <div class="small text-muted">Alergény: @order.Allergens</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusClass(order.Status)">
+                                    @GetStatusLabel(order.Status)
+                                </span>
+                            </td>
+                            <td class="text-end pe-3 text-muted small">@order.CreatedAt.ToLocalTime().ToString("HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 }
 
-<h3 class="mt-4">Moje objednávky</h3>
-
-@if (myOrders == null)
-{
-    <p>Načítavam...</p>
-}
-else if (!myOrders.Any())
-{
-    <p>Zatiaľ nemáš žiadne objednávky.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Jedlo</th>
-                <th>Stav</th>
-                <th>Dátum</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var order in myOrders)
-            {
-                <tr>
-                    <td>@order.MealDescription</td>
-                    <td>
-                        <span class="badge @GetStatusClass(order.Status)">@order.Status</span>
-                    </td>
-                    <td>@order.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
 @code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Date { get; set; }
+
     private List<MenuItemDto>? menuItems;
     private List<OrderDto>? myOrders;
-    private string? errorMessage;
-    private string? successMessage;
+    private List<int> myOrderIds = new();
+    private DateOnly targetDate;
+
+    private string DisplayDate => targetDate.ToString("dd. MM. yyyy");
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        SseClientService.OnNotificationReceived += OnNotification;
+        await SseClientService.StartAsync();
+        await LoadMenu();
     }
 
-    private async Task LoadData()
+    protected override async Task OnParametersSetAsync()
     {
-        var menu = await OrderClient.GetTodayMenuAsync();
-        menuItems = menu?.ToList();
-
-        var orders = await OrderClient.GetMyOrdersAsync();
-        myOrders = orders?.ToList();
+        await LoadMenu();
     }
 
-    private async Task Order(int menuItemId)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        errorMessage = null;
-        successMessage = null;
+        if (firstRender)
+        {
+            await LoadUserOrders();
+            StateHasChanged();
+        }
+    }
 
+    private void OnNotification()
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadMenu();
+            await LoadUserOrders();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadMenu()
+    {
+        targetDate = DateOnly.TryParse(Date, out var d) ? d : DateOnly.FromDateTime(DateTime.Today);
+        var menuResult = await OrderClient.GetMenuByDateAsync(targetDate);
+        menuItems = menuResult?.ToList();
+    }
+
+    private async Task LoadUserOrders()
+    {
+        try 
+        {
+            var storedIds = await JS.InvokeAsync<string>("localStorage.getItem", "myOrderIds");
+            if (!string.IsNullOrEmpty(storedIds))
+            {
+                myOrderIds = System.Text.Json.JsonSerializer.Deserialize<List<int>>(storedIds) ?? new();
+                if (myOrderIds.Any())
+                {
+                    var ordersResult = await OrderClient.GetOrdersBatchAsync(myOrderIds);
+                    myOrders = ordersResult?.ToList();
+                }
+            }
+        }
+        catch { }
+    }
+
+    private async Task OrderMeal(int menuItemId)
+    {
         try
         {
-            await OrderClient.CreateOrderAsync(menuItemId);
-            successMessage = "Objednávka bola vytvorená!";
-            await LoadData();
+            var order = await OrderClient.CreateOrderAsync(new CreateOrderDto(menuItemId));
+            myOrderIds.Add(order.Id);
+            await JS.InvokeVoidAsync("localStorage.setItem", "myOrderIds", System.Text.Json.JsonSerializer.Serialize(myOrderIds));
+            await LoadMenu();
+            await LoadUserOrders();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Chyba: {ex.Message}";
+            await JS.InvokeVoidAsync("alert", $"Chyba: {ex.Message}");
         }
+    }
+
+    public void Dispose()
+    {
+        SseClientService.OnNotificationReceived -= OnNotification;
     }
 
     private string GetStatusClass(string status) => status switch
     {
-        "Preparing" => "bg-warning text-dark",
-        "Ready" => "bg-info",
-        "Completed" => "bg-success",
-        "Cancelled" => "bg-danger",
-        _ => "bg-secondary"
+        "Preparing" => "bg-secondary text-white",
+        "Ready" => "bg-success text-white",
+        "Completed" => "bg-success text-white",
+        "Cancelled" => "bg-danger text-white",
+        _ => "bg-secondary text-white"
     };
+
+    private string GetStatusLabel(string status) => status switch
+    {
+        "Preparing" => "Pripravuje sa",
+        "Ready" => "Hotové",
+        "Completed" => "Prevzaté",
+        "Cancelled" => "Zrušené",
+        _ => status
+    };
+
+    private string GetDayOfWeekName(DateOnly date)
+    {
+        return date.DayOfWeek switch
+        {
+            DayOfWeek.Monday => "pondelok",
+            DayOfWeek.Tuesday => "utorok",
+            DayOfWeek.Wednesday => "streda",
+            DayOfWeek.Thursday => "štvrtok",
+            DayOfWeek.Friday => "piatok",
+            DayOfWeek.Saturday => "sobota",
+            DayOfWeek.Sunday => "nedeľa",
+            _ => ""
+        };
+    }
 }

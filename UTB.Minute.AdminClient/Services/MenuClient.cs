@@ -37,7 +37,7 @@ public class MenuClient(HttpClient httpClient) : IMenuClient
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            throw new Exception($"API Error: {error}");
+            throw new Exception($"API Error (Status: {response.StatusCode}): {error}");
         }
     }
 

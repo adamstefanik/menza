@@ -1,0 +1,112 @@
+{
+    "id": "menza",
+    "realm": "menza",
+    "sslRequired": "none",
+    "enabled": true,
+    "clients": [
+        {
+            "clientId": "admin-client",
+            "enabled": true,
+            "publicClient": true,
+            "protocolMappers": [
+                {
+                    "name": "realm roles",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-usermodel-realm-role-mapper",
+                    "config": {
+                        "multivalued": "true",
+                        "userinfo.token.claim": "true",
+                        "id.token.claim": "true",
+                        "access.token.claim": "true",
+                        "claim.name": "roles",
+                        "jsonType.label": "String"
+                    }
+                }
+            ],
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": true,
+            "redirectUris": [
+                "*"
+            ],
+            "webOrigins": [
+                "+"
+            ]
+        },
+        {
+            "clientId": "canteen-client",
+            "enabled": true,
+            "publicClient": true,
+            "protocolMappers": [
+                {
+                    "name": "realm roles",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-usermodel-realm-role-mapper",
+                    "config": {
+                        "multivalued": "true",
+                        "userinfo.token.claim": "true",
+                        "id.token.claim": "true",
+                        "access.token.claim": "true",
+                        "claim.name": "roles",
+                        "jsonType.label": "String"
+                    }
+                }
+            ],
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": true,
+            "redirectUris": [
+                "*"
+            ],
+            "webOrigins": [
+                "+"
+            ]
+        }
+    ],
+    "roles": {
+        "realm": [
+            {
+                "name": "admin"
+            },
+            {
+                "name": "cook"
+            }
+        ]
+    },
+    "users": [
+        {
+            "username": "admin",
+            "enabled": true,
+            "firstName": "Admin",
+            "lastName": "Menza",
+            "email": "admin@menza.utb",
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "admin", "cook"
+            ]
+        },
+        {
+            "username": "cook",
+            "enabled": true,
+            "firstName": "Cook",
+            "lastName": "Menza",
+            "email": "cook@menza.utb",
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "cook",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "cook"
+            ]
+        }
+    ]
+}

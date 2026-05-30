@@ -1,6 +1,8 @@
 @page "/add-menu-item"
 @using UTB.Minute.AdminClient.Services
 @using UTB.Minute.Contracts
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin")]
 @inject IMenuClient MenuClient
 @inject IMealClient MealClient
 @inject NavigationManager Nav

@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using UTB.Minute.Contracts;
 
-namespace UTB.Minute.AdminClient.Services;
+namespace UTB.Minute.CanteenClient.Services;
 
 public class MealClient(HttpClient httpClient) : IMealClient
 {

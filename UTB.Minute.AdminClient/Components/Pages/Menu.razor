@@ -1,85 +1,122 @@
 @page "/menu"
 @using UTB.Minute.AdminClient.Services
 @using UTB.Minute.Contracts
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin")]
 @inject IMenuClient MenuClient
 @inject NavigationManager Nav
 
 @rendermode InteractiveServer
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Správa menu</h1>
-    <a href="/add-menu-item" class="btn btn-success">+ Pridať do menu</a>
+<div class="wk-tabs">
+    <div class="wk-tab active">Správa menu</div>
+    <div class="ms-auto">
+        @if (Date != null)
+        {
+            <button class="btn btn-outline-secondary btn-sm me-2" @onclick='() => Nav.NavigateTo("/menu")'>Zobraziť všetko</button>
+        }
+        <a href="/add-menu-item" class="btn btn-success btn-sm">+ Pridať do menu</a>
+    </div>
 </div>
 
-<h4>Dnešné menu (@DateTime.Today.ToString("dd.MM.yyyy"))</h4>
+@if (filteredMenu == null)
+{
+    <p>Načítavam...</p>
+}
+else
+{
+    @if (Date == null && todayMenu != null && todayMenu.Any())
+    {
+        <div class="fw-bold text-muted small mb-2 uppercase">Dnešné menu</div>
+        <table class="table mb-5">
+            <thead>
+                <tr>
+                    <th>Jedlo</th>
+                    <th class="text-end">Dostupné porcie</th>
+                    <th class="text-end">Akcia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in todayMenu)
+                {
+                    <tr>
+                        <td>
+                            <div>@item.MealDescription</div>
+                            @if (!string.IsNullOrEmpty(item.Allergens))
+                            {
+                                <div class="small text-muted">Alergény: @item.Allergens</div>
+                            }
+                        </td>
+                        <td class="text-end">@item.AvailablePortions</td>
+                        <td class="text-end">
+                            <a href="/edit-menu-item/@item.Id" class="btn btn-secondary btn-sm">Upraviť</a>
+                            <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Jedlo</th>
-            <th>Dostupné porcie</th>
-            <th>Akcia</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (todayMenu != null)
-        {
-            @foreach (var item in todayMenu)
+    <div class="fw-bold text-muted small mb-2 uppercase">Položky menu</div>
+    <table class="table">
+        <thead>
+            <tr>
+                @if (Date == null)
+                {
+                    <th>Dátum</th>
+                }
+                <th>Jedlo</th>
+                <th class="text-end">Dostupné porcie</th>
+                <th class="text-end">Akcia</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!filteredMenu.Any())
+            {
+                <tr><td colspan="4" class="text-center p-4">Pre tento deň nie sú v menu žiadne záznamy.</td></tr>
+            }
+            @foreach (var item in filteredMenu.OrderBy(m => m.Date))
             {
                 <tr>
-                    <td>@item.MealDescription</td>
-                    <td>@item.AvailablePortions</td>
+                    @if (Date == null)
+                    {
+                        <td>@item.Date.ToString("dd.MM.yyyy")</td>
+                    }
                     <td>
-                        <a href="/edit-menu-item/@item.Id" class="btn btn-warning btn-sm">Upraviť</a>
+                        <div>@item.MealDescription</div>
+                        @if (!string.IsNullOrEmpty(item.Allergens))
+                        {
+                            <div class="small text-muted">Alergény: @item.Allergens</div>
+                        }
+                    </td>
+                    <td class="text-end">@item.AvailablePortions</td>
+                    <td class="text-end">
+                        <a href="/edit-menu-item/@item.Id" class="btn btn-secondary btn-sm">Upraviť</a>
                         <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
                     </td>
                 </tr>
             }
-        }
-        else
-        {
-            <tr><td colspan="3">Načítavam...</td></tr>
-        }
-    </tbody>
-</table>
-
-<h4 class="mt-4">Všetky položky menu</h4>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Dátum</th>
-            <th>Jedlo</th>
-            <th>Dostupné porcie</th>
-            <th>Akcia</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (allMenu != null)
-        {
-            @foreach (var item in allMenu)
-            {
-                <tr>
-                    <td>@item.Date.ToString("dd.MM.yyyy")</td>
-                    <td>@item.MealDescription</td>
-                    <td>@item.AvailablePortions</td>
-                    <td>
-                        <a href="/edit-menu-item/@item.Id" class="btn btn-warning btn-sm">Upraviť</a>
-                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
-                    </td>
-                </tr>
-            }
-        }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+}
 
 @code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Date { get; set; }
+
     private List<MenuItemDto>? todayMenu;
     private List<MenuItemDto>? allMenu;
+    private List<MenuItemDto>? filteredMenu;
 
-    protected override async Task OnInitializedAsync()
+    private string DisplayDate => DateOnly.TryParse(Date, out var d) ? d.ToString("dd.MM.yyyy") : "";
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected override async Task OnParametersSetAsync()
     {
-        await LoadData();
+        await ApplyFilter();
     }
 
     private async Task LoadData()
@@ -89,6 +126,24 @@
 
         var all = await MenuClient.GetMenuItemsAsync();
         allMenu = all?.ToList();
+
+        await ApplyFilter();
+    }
+
+    private Task ApplyFilter()
+    {
+        if (allMenu == null) return Task.CompletedTask;
+
+        if (DateOnly.TryParse(Date, out var targetDate))
+        {
+            filteredMenu = allMenu.Where(m => m.Date == targetDate).ToList();
+        }
+        else
+        {
+            filteredMenu = allMenu;
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task Delete(int id)

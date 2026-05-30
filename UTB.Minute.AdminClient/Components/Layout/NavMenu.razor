@@ -1,39 +1,107 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">UTB.Minute.AdminClient</a>
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+@inject NavigationManager Nav
+@inject UTB.Minute.AdminClient.Services.IMenuClient MenuClient
+
+@rendermode InteractiveServer
+
+<div class="wk-card">
+    <div class="wk-card-header">Výber obdobia</div>
+    <div class="wk-calendar-wrapper">
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+            <span class="wk-calendar-arrow" @onclick="PrevMonth">&lt;</span>
+            <span class="fw-bold small">@GetMonthName() @viewDate.Year</span>
+            <span class="wk-calendar-arrow" @onclick="NextMonth">&gt;</span>
+        </div>
+        <div class="wk-calendar-grid">
+            <div class="wk-day-name">po</div><div class="wk-day-name">ut</div><div class="wk-day-name">st</div>
+            <div class="wk-day-name">št</div><div class="wk-day-name">pi</div><div class="wk-day-name">so</div>
+            <div class="wk-day-name">ne</div>
+            
+            @foreach (var day in GetCalendarDays())
+            {
+                var isSelected = Nav.Uri.Contains($"date={day.Date:yyyy-MM-dd}");
+                var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today) || (day.Date.Day == 30 && day.Date.Month == 5 && day.Date.Year == 2026); // Special today for demo
+                var hasMenu = highlightedDates.Contains(day.Date);
+                var isCurrentMonth = day.Date.Month == viewDate.Month;
+
+                <a href="/menu?date=@day.Date.ToString("yyyy-MM-dd")" 
+                   class="wk-day @(isCurrentMonth ? "" : "wk-day-prev") @(isToday ? "wk-day-today" : "") @(hasMenu ? "wk-day-highlight" : "") @(isSelected ? "wk-day-selected" : "")" 
+                   style="text-decoration: none;">
+                    @day.Date.Day
+                </a>
+            }
+        </div>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<nav class="mt-3">
+    <AuthorizeView Roles="admin">
+        <Authorized>
+            <NavLink class="wk-nav-item" href="" Match="NavLinkMatch.All">
+                Správa jedál
+            </NavLink>
+            <NavLink class="wk-nav-item" href="menu">
+                Správa menu
+            </NavLink>
+        </Authorized>
+    </AuthorizeView>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+    <AuthorizeView Roles="admin,cook">
+        <Authorized>
+            <NavLink class="wk-nav-item" href="orders">
+                Objednávky
             </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="menu">
-                <span class="bi bi-calendar-check" aria-hidden="true"></span> Menu
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="orders">
-                <span class="bi bi-list-check" aria-hidden="true"></span> Objednávky
-             </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        </Authorized>
+    </AuthorizeView>
+</nav>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+@code {
+    private DateTime viewDate = new DateTime(2026, 5, 1);
+    private List<DateOnly> highlightedDates = new();
+    private CultureInfo skCulture = CultureInfo.GetCultureInfo("sk-SK");
 
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            var items = await MenuClient.GetMenuItemsAsync();
+            highlightedDates = items.Select(m => m.Date).Distinct().ToList();
+        }
+        catch { }
+    }
+
+    private void PrevMonth() => viewDate = viewDate.AddMonths(-1);
+    private void NextMonth() => viewDate = viewDate.AddMonths(1);
+
+    private string GetMonthName() => skCulture.DateTimeFormat.GetMonthName(viewDate.Month);
+
+    private List<CalendarDay> GetCalendarDays()
+    {
+        var days = new List<CalendarDay>();
+        var firstDayOfMonth = new DateTime(viewDate.Year, viewDate.Month, 1);
+        
+        // Calculate offset for Monday-based week
+        int offset = ((int)firstDayOfMonth.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        
+        var startDate = firstDayOfMonth.AddDays(-offset);
+        
+        for (int i = 0; i < 42; i++)
+        {
+            days.Add(new CalendarDay { Date = DateOnly.FromDateTime(startDate.AddDays(i)) });
+        }
+        
+        return days;
+    }
+
+    private class CalendarDay
+    {
+        public DateOnly Date { get; set; }
+    }
+}
+
+<style>
+    .bi { vertical-align: middle; margin-top: -3px; }
+    .wk-day { color: #4b5563; border-radius: 4px; }
+    .wk-day:hover { background-color: #f1f5f9; }
+</style>

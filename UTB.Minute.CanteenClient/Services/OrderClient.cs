@@ -18,20 +18,36 @@ public class OrderClient(HttpClient httpClient) : IOrderClient
         }
     }
 
-    public async Task<OrderDto> CreateOrderAsync(int menuItemId)
+    public async Task<IEnumerable<MenuItemDto>> GetMenuByDateAsync(DateOnly date)
     {
-        var dto = new CreateOrderDto(menuItemId);
+        try
+        {
+            var dateStr = date.ToString("yyyy-MM-dd");
+            return await httpClient.GetFromJsonAsync<IEnumerable<MenuItemDto>>($"api/menu?date={dateStr}") ?? [];
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return [];
+        }
+    }
+
+    public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto)
+    {
         var response = await httpClient.PostAsJsonAsync("api/orders", dto);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<OrderDto>() 
             ?? throw new Exception("Invalid response");
     }
 
-    public async Task<IEnumerable<OrderDto>> GetMyOrdersAsync()
+    public async Task<IEnumerable<OrderDto>> GetOrdersBatchAsync(List<int> ids)
     {
         try
         {
-            return await httpClient.GetFromJsonAsync<IEnumerable<OrderDto>>("api/orders") ?? [];
+            if (ids == null || !ids.Any()) return [];
+            var response = await httpClient.PostAsJsonAsync("api/orders/batch", ids);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<IEnumerable<OrderDto>>() ?? [];
         }
         catch (Exception ex)
         {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -7,6 +7,7 @@
     <base href="/" />
     <ResourcePreloader />
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["UTB.Minute.CanteenClient.styles.css"]" />
     <ImportMap />
@@ -21,3 +22,41 @@
 </body>
 
 </html>
+
+@implements IDisposable
+@code {
+    [CascadingParameter] HttpContext? HttpContext { get; set; }
+    [Inject] public UTB.Minute.CanteenClient.Services.TokenProvider TokenProvider { get; set; } = default!;
+    [Inject] public PersistentComponentState ApplicationState { get; set; } = default!;
+
+    private PersistingComponentStateSubscription _subscription;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _subscription = ApplicationState.RegisterOnPersisting(PersistToken);
+
+        if (ApplicationState.TryTakeFromJson<string>("access_token", out var restoredToken))
+        {
+            TokenProvider.AccessToken = restoredToken;
+        }
+        else if (HttpContext is not null && HttpContext.User.Identity?.IsAuthenticated == true)
+        {
+            var token = await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.GetTokenAsync(HttpContext, "access_token");
+            TokenProvider.AccessToken = token;
+        }
+    }
+
+    private Task PersistToken()
+    {
+        if (!string.IsNullOrEmpty(TokenProvider.AccessToken))
+        {
+            ApplicationState.PersistAsJson("access_token", TokenProvider.AccessToken);
+        }
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _subscription.Dispose();
+    }
+}

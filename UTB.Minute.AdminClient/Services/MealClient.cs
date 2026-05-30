@@ -55,9 +55,9 @@ public class MealClient(HttpClient httpClient) : IMealClient
     public async Task UpdateMealAsync(int id, MealDto meal) =>
         await httpClient.PutAsJsonAsync($"api/meals/{id}", meal);
 
-    public async Task DeleteMealAsync(int id)
+    public async Task DeactivateMealAsync(int id)
     {
-        var response = await httpClient.DeleteAsync($"api/meals/{id}");
+        var response = await httpClient.PatchAsync($"api/meals/{id}/deactivate", null);
         response.EnsureSuccessStatusCode();
     }
 }
