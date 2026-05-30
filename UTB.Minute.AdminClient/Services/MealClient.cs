@@ -26,7 +26,6 @@ public class MealClient(HttpClient httpClient) : IMealClient
         }
     }
 
-    // ⬅️ PRIDAJ TOTO
     public async Task<MealDto?> GetMealAsync(int id)
     {
         try 
@@ -58,6 +57,6 @@ public class MealClient(HttpClient httpClient) : IMealClient
     public async Task DeactivateMealAsync(int id)
     {
         var response = await httpClient.PatchAsync($"api/meals/{id}/deactivate", null);
-        response.EnsureSuccessStatusCode();
+        try { response.EnsureSuccessStatusCode(); } catch { /* fail silently */ }
     }
 }

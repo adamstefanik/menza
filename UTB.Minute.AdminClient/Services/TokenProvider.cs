@@ -1,34 +1,50 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
+using System.Net.Http.Headers;
+
 namespace UTB.Minute.AdminClient.Services;
 
 public class TokenProvider
 {
-    private string? _accessToken;
-    public string? AccessToken 
-    { 
-        get => _accessToken;
-        set 
-        {
-            _accessToken = value;
-            if (!string.IsNullOrEmpty(value))
-                Console.WriteLine($"[AUTH] TokenProvider: Access token has been SET (Length: {value.Length})");
-        }
-    }
+    public string? AccessToken { get; set; }
 }
 
-public class TokenHandler(TokenProvider tokenProvider) : DelegatingHandler
+public class TokenHandler(IHttpContextAccessor httpContextAccessor, TokenProvider tokenProvider) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrEmpty(tokenProvider.AccessToken))
+        string? accessToken = null;
+
+        // 1. Try to get token from HttpContext (Works during SSR / initial load)
+        var ctx = httpContextAccessor.HttpContext;
+        if (ctx?.User?.Identity?.IsAuthenticated == true)
         {
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenProvider.AccessToken);
-            var tokenSnippet = tokenProvider.AccessToken.Length > 10 ? tokenProvider.AccessToken[..10] + "..." : "short-token";
-            Console.WriteLine($"[AUTH] Token attached to {request.Method} {request.RequestUri} (Snippet: {tokenSnippet})");
+            accessToken = await ctx.GetTokenAsync("access_token");
+        }
+
+        // 2. Fallback to TokenProvider (Works during Interactive session after persistence logic in Routes.razor runs)
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            accessToken = tokenProvider.AccessToken;
+        }
+
+        // 3. Attach the token if found
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            Console.WriteLine($"[DEBUG] FULL ACCESS TOKEN: {accessToken}");
+            var snippet = accessToken.Length > 10 ? accessToken[..10] + "..." : "token";
+            Console.WriteLine($"[AUTH] Token attached to {request.Method} {request.RequestUri} (Snippet: {snippet})");
         }
         else
         {
-            Console.WriteLine($"[AUTH] WARNING: No token found in TokenProvider for {request.Method} {request.RequestUri}");
+            // Only log warning for non-GET requests to avoid noise for public data
+            if (request.Method != HttpMethod.Get)
+            {
+                 Console.WriteLine($"[AUTH] WARNING: No token found for {request.Method} {request.RequestUri}");
+            }
         }
+
         return await base.SendAsync(request, cancellationToken);
     }
 }

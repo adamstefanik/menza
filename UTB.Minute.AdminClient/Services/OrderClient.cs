@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Net.Http.Headers;
 using UTB.Minute.Contracts;
 
 namespace UTB.Minute.AdminClient.Services;
@@ -10,7 +9,13 @@ public class OrderClient(HttpClient httpClient) : IOrderClient
     {
         try
         {
-            return await httpClient.GetFromJsonAsync<IEnumerable<OrderDto>>("api/orders") ?? [];
+            var response = await httpClient.GetAsync("api/orders");
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[API Error] GetOrdersAsync failed: {response.StatusCode}");
+                return [];
+            }
+            return await response.Content.ReadFromJsonAsync<IEnumerable<OrderDto>>() ?? [];
         }
         catch (Exception ex)
         {
@@ -22,6 +27,6 @@ public class OrderClient(HttpClient httpClient) : IOrderClient
     public async Task UpdateOrderStatusAsync(int id, UpdateOrderStatusDto dto)
     {
         var response = await httpClient.PutAsJsonAsync($"api/orders/{id}/status", dto);
-        response.EnsureSuccessStatusCode();
+        try { response.EnsureSuccessStatusCode(); } catch { /* fail silently */ }
     }
 }

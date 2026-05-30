@@ -20,11 +20,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         
         if (string.IsNullOrEmpty(keycloakUrl))
         {
-            keycloakUrl = "https://127.0.0.1:8080"; 
+            keycloakUrl = "http://localhost:8080"; 
         }
         else if (!keycloakUrl.Contains("://"))
         {
-            keycloakUrl = "https://" + keycloakUrl; 
+            keycloakUrl = "http://" + keycloakUrl; 
         }
 
         options.Authority = $"{keycloakUrl}/realms/menza";
@@ -47,8 +47,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
             ValidateAudience = false, 
-            ValidateIssuer = false,   // Crucial for Docker local development
-            ValidateLifetime = false, // Be very lenient for now
+            ValidateIssuer = false,   
+            ValidateLifetime = false, 
             ValidateSignatureLast = false,
             SignatureValidator = delegate (string token, Microsoft.IdentityModel.Tokens.TokenValidationParameters parameters)
             {

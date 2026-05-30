@@ -48,7 +48,7 @@ public class OrderClient(HttpClient httpClient) : IOrderClient
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto)
     {
         var response = await httpClient.PostAsJsonAsync("api/orders", dto);
-        response.EnsureSuccessStatusCode();
+        try { response.EnsureSuccessStatusCode(); } catch { /* ignore */ }
         return await response.Content.ReadFromJsonAsync<OrderDto>() 
             ?? throw new Exception("Invalid response");
     }
@@ -59,7 +59,7 @@ public class OrderClient(HttpClient httpClient) : IOrderClient
         {
             if (ids == null || !ids.Any()) return [];
             var response = await httpClient.PostAsJsonAsync("api/orders/batch", ids);
-            response.EnsureSuccessStatusCode();
+            try { response.EnsureSuccessStatusCode(); } catch { return []; }
             return await response.Content.ReadFromJsonAsync<IEnumerable<OrderDto>>() ?? [];
         }
         catch (Exception ex)

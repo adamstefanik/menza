@@ -186,6 +186,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorComponents<UTB.Minute.AdminClient.Components.App>()
+
     .AddInteractiveServerRenderMode();
 
 app.MapGet("/login", () => 
