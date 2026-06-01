@@ -14,10 +14,9 @@
 </div>
 
 <div class="wk-meal-header wk-meal-grid-layout">
-    <div></div>
-    <div>Názov jedla</div>
-    <div class="text-end">Zostáva</div>
-    <div class="text-end">Cena</div>
+    <div style="grid-column: span 2">Názov jedla</div>
+    <div class="text-center">Zostáva</div>
+    <div class="text-center">Cena</div>
     <div></div>
 </div>
 
@@ -50,8 +49,8 @@ else
                     <div class="wk-meal-allergens">Alergény: @item.Allergens</div>
                 }
             </div>
-            <div class="wk-meal-val fw-bold text-end">@(isSoldOut ? "0" : item.AvailablePortions.ToString()) ks</div>
-            <div class="wk-meal-val text-end">@item.Price.ToString("F2") €</div>
+            <div class="wk-meal-val fw-bold">@(isSoldOut ? "0" : item.AvailablePortions.ToString()) ks</div>
+            <div class="wk-meal-val">@item.Price.ToString("F2") €</div>
             <div class="text-end">
                 <button class="btn-wk ms-auto" disabled="@isSoldOut" @onclick="() => OrderMeal(item.Id)">
                     Objednať
@@ -63,41 +62,43 @@ else
 
 @if (myOrders != null && myOrders.Any())
 {
-    <div class="mt-5 border-top pt-4">
-        <h4 class="mb-3">Moje objednávky</h4>
-        <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
-            <table class="table table-sm table-hover mb-0">
-                <thead class="bg-light">
+    <div class="wk-tabs mt-5">
+        <div class="wk-tab static">Moje objednávky</div>
+    </div>
+    <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="text-center" style="width: 80px;">Číslo</th>
+                    <th>Jedlo</th>
+                    <th class="text-center" style="width: 140px;">Stav</th>
+                    <th class="text-center" style="width: 100px;">Čas</th>
+                    <th style="width: 20px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in myOrders.OrderByDescending(o => o.CreatedAt))
+                {
                     <tr>
-                        <th class="ps-3">Číslo</th>
-                        <th>Jedlo</th>
-                        <th>Stav</th>
-                        <th class="text-end pe-3">Čas</th>
+                        <td class="text-center"><strong>@order.Id</strong></td>
+                        <td>
+                            <div>@order.MealDescription</div>
+                            @if (!string.IsNullOrEmpty(order.Allergens))
+                            {
+                                <div class="small text-muted">Alergény: @order.Allergens</div>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <span class="badge @GetStatusClass(order.Status)">
+                                @GetStatusLabel(order.Status)
+                            </span>
+                        </td>
+                        <td class="text-center text-muted small">@order.CreatedAt.ToLocalTime().ToString("HH:mm")</td>
+                        <td></td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var order in myOrders.OrderByDescending(o => o.CreatedAt))
-                    {
-                        <tr>
-                            <td class="ps-3"><strong>@order.Id</strong></td>
-                            <td>
-                                <div>@order.MealDescription</div>
-                                @if (!string.IsNullOrEmpty(order.Allergens))
-                                {
-                                    <div class="small text-muted">Alergény: @order.Allergens</div>
-                                }
-                            </td>
-                            <td>
-                                <span class="badge @GetStatusClass(order.Status)">
-                                    @GetStatusLabel(order.Status)
-                                </span>
-                            </td>
-                            <td class="text-end pe-3 text-muted small">@order.CreatedAt.ToLocalTime().ToString("HH:mm")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 }
 

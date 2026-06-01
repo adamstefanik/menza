@@ -2,6 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using UTB.Minute.Contracts;
 using UTB.Minute.Db;
@@ -28,6 +29,7 @@ public class TestFixture : IAsyncLifetime
 
         connectionString = await app.GetConnectionStringAsync("database");
         HttpClient = app.CreateHttpClient("webapi", "http");
+        HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestScheme");
 
         using var context = CreateContext();
 

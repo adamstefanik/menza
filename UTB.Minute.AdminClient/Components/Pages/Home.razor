@@ -22,7 +22,7 @@
                     <th>Názov</th>
                     <th class="text-end">Cena</th>
                     <th class="text-center">Stav</th>
-                    <th class="text-end">Akcia</th>
+                    <th class="text-end"><div class="d-inline-block text-center" style="width: 200px;">Akcia</div></th>
                 </tr>
             </thead>
             <tbody>
@@ -50,11 +50,13 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <a href="/edit-meal/@m.Id" class="btn btn-secondary btn-sm">Upraviť</a>
-                                @if (m.IsActive)
-                                {
-                                    <button class="btn btn-danger btn-sm" @onclick="() => Deactivate(m.Id)">Deaktivovať</button>
-                                }
+                                <div class="d-inline-block text-center" style="width: 200px;">
+                                    <a href="/edit-meal/@m.Id" class="btn btn-secondary btn-sm me-1">Upraviť</a>
+                                    @if (m.IsActive)
+                                    {
+                                        <button class="btn btn-danger btn-sm" @onclick="() => Deactivate(m.Id)">Deaktivovať</button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }

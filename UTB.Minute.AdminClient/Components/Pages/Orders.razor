@@ -33,18 +33,18 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
+                <th class="text-center" style="width: 60px;">ID</th>
                 <th>Jedlo</th>
-                <th>Stav</th>
-                <th>Dátum</th>
-                <th>Akcia</th>
+                <th class="text-center" style="width: 140px;">Stav</th>
+                <th class="text-center" style="width: 160px;">Dátum</th>
+                <th class="text-end"><div class="d-inline-block text-center" style="width: 200px;">Akcia</div></th>
             </tr>
         </thead>
         <tbody>
             @foreach (var order in orders)
             {
                 <tr>
-                    <td>@order.Id</td>
+                    <td class="text-center">@order.Id</td>
                     <td>
                         <div>@order.MealDescription</div>
                         @if (!string.IsNullOrEmpty(order.Allergens))
@@ -52,28 +52,30 @@ else
                             <div class="small text-muted">Alergény: @order.Allergens</div>
                         }
                     </td>
-                    <td>
+                    <td class="text-center">
                         <span class="badge @GetStatusClass(order.Status)">@GetStatusLabel(order.Status)</span>
                     </td>
-                    <td>@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>
-                        @if (order.Status == "Preparing")
-                        {
-                            <button class="btn btn-success btn-sm" @onclick='() => UpdateStatus(order.Id, "Ready")'>Pripravené</button>
-                            <button class="btn btn-danger btn-sm" @onclick='() => UpdateStatus(order.Id, "Cancelled")'>Zrušiť</button>
-                        }
-                        else if (order.Status == "Ready")
-                        {
-                            <button class="btn btn-success btn-sm" @onclick='() => UpdateStatus(order.Id, "Completed")'>Dokončiť</button>
-                        }
-                        else if (order.Status == "Completed")
-                        {
-                            <span class="text-muted">Dokončená</span>
-                        }
-                        else if (order.Status == "Cancelled")
-                        {
-                            <span class="text-muted">Zrušená</span>
-                        }
+                    <td class="text-center">@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    <td class="text-end">
+                        <div class="d-inline-block text-center" style="width: 200px;">
+                            @if (order.Status == "Preparing")
+                            {
+                                <button class="btn btn-success btn-sm me-1" @onclick='() => UpdateStatus(order.Id, "Ready")'>Pripravené</button>
+                                <button class="btn btn-danger btn-sm" @onclick='() => UpdateStatus(order.Id, "Cancelled")'>Zrušiť</button>
+                            }
+                            else if (order.Status == "Ready")
+                            {
+                                <button class="btn btn-success btn-sm" @onclick='() => UpdateStatus(order.Id, "Completed")'>Dokončiť</button>
+                            }
+                            else if (order.Status == "Completed")
+                            {
+                                <span class="text-muted">Dokončená</span>
+                            }
+                            else if (order.Status == "Cancelled")
+                            {
+                                <span class="text-muted">Zrušená</span>
+                            }
+                        </div>
                     </td>
                 </tr>
             }

@@ -112,7 +112,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-builder.Services.AddAuthorization();
+
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddAuthentication().AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, UTB.Minute.WebApi.Helpers.TestAuthHandler>("TestScheme", options => { });
+}
+
+builder.Services.AddAuthorization(options =>
+{
+    var authSchemes = new List<string> { JwtBearerDefaults.AuthenticationScheme };
+    if (builder.Environment.IsEnvironment("Testing"))
+    {
+        authSchemes.Add("TestScheme");
+    }
+
+    options.AddPolicy("Admin", policy => policy
+        .RequireRole("admin")
+        .AddAuthenticationSchemes(authSchemes.ToArray()));
+
+    options.AddPolicy("Cook", policy => policy
+        .RequireRole("cook")
+        .AddAuthenticationSchemes(authSchemes.ToArray()));
+
+    options.AddPolicy("AdminOrCook", policy => policy
+        .RequireRole("admin", "cook")
+        .AddAuthenticationSchemes(authSchemes.ToArray()));
+});
 
 var app = builder.Build();
 
@@ -417,7 +442,6 @@ static async Task<Results<Ok<OrderDto>, NotFound, BadRequest<string>>> UpdateOrd
         (OrderStatus.Preparing, OrderStatus.Ready) => true,
         (OrderStatus.Preparing, OrderStatus.Cancelled) => true,
         (OrderStatus.Ready, OrderStatus.Completed) => true,
-        (OrderStatus.Cancelled, OrderStatus.Completed) => true,
         _ => false
     };
 

@@ -213,7 +213,7 @@ body {
 
 .wk-meal-desc { font-weight: 500; margin-bottom: 4px; }
 .wk-meal-allergens { color: var(--wk-text-muted); font-size: 0.8rem; }
-.wk-meal-val { text-align: right; font-size: 0.9rem; }
+.wk-meal-val { text-align: center; font-size: 0.9rem; }
 
 .btn-wk {
     background-color: var(--wk-accent-blue);

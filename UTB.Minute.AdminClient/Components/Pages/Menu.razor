@@ -29,15 +29,23 @@ else
         <table class="table mb-5">
             <thead>
                 <tr>
+                    @if (Date == null)
+                    {
+                        <th style="width: 100px;"></th>
+                    }
                     <th>Jedlo</th>
-                    <th class="text-end">Dostupné porcie</th>
-                    <th class="text-end">Akcia</th>
+                    <th class="text-center" style="width: 150px;">Dostupné porcie</th>
+                    <th class="text-end"><div class="d-inline-block text-center" style="width: 180px;">Akcia</div></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in todayMenu)
                 {
                     <tr>
+                        @if (Date == null)
+                        {
+                            <td></td>
+                        }
                         <td>
                             <div>@item.MealDescription</div>
                             @if (!string.IsNullOrEmpty(item.Allergens))
@@ -45,10 +53,12 @@ else
                                 <div class="small text-muted">Alergény: @item.Allergens</div>
                             }
                         </td>
-                        <td class="text-end">@item.AvailablePortions</td>
+                        <td class="text-center">@item.AvailablePortions</td>
                         <td class="text-end">
-                            <a href="/edit-menu-item/@item.Id" class="btn btn-secondary btn-sm">Upraviť</a>
-                            <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                            <div class="d-inline-block text-center" style="width: 180px;">
+                                <a href="/edit-menu-item/@item.Id" class="btn btn-secondary btn-sm me-1">Upraviť</a>
+                                <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -62,11 +72,11 @@ else
             <tr>
                 @if (Date == null)
                 {
-                    <th>Dátum</th>
+                    <th style="width: 100px;">Dátum</th>
                 }
                 <th>Jedlo</th>
-                <th class="text-end">Dostupné porcie</th>
-                <th class="text-end">Akcia</th>
+                <th class="text-center" style="width: 150px;">Dostupné porcie</th>
+                <th class="text-end"><div class="d-inline-block text-center" style="width: 180px;">Akcia</div></th>
             </tr>
         </thead>
         <tbody>
@@ -88,10 +98,12 @@ else
                             <div class="small text-muted">Alergény: @item.Allergens</div>
                         }
                     </td>
-                    <td class="text-end">@item.AvailablePortions</td>
+                    <td class="text-center">@item.AvailablePortions</td>
                     <td class="text-end">
-                        <a href="/edit-menu-item/@item.Id" class="btn btn-secondary btn-sm">Upraviť</a>
-                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                        <div class="d-inline-block text-center" style="width: 180px;">
+                            <a href="/edit-menu-item/@item.Id" class="btn btn-secondary btn-sm me-1">Upraviť</a>
+                            <button class="btn btn-danger btn-sm" @onclick="() => Delete(item.Id)">Zmazať</button>
+                        </div>
                     </td>
                 </tr>
             }
