@@ -144,4 +144,4 @@ Testy automaticky spustia PostgreSQL kontajner cez Aspire.
 
 ## Pomer práce v tíme
 
-1:2
+1:1
